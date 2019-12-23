@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>接口自动化测试</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/login.css">
+    <script src="../static/js/jquery.js"></script>
+</head>
+<body>
+<div class="header" id="head">
+  <div class="title">自动化测试平台</div>
+</div>
+<div class="wrap" id="wrap">
+	<div class="logGet">
+        <!-- 头部提示信息 -->
+        <div class="logD logDtip">
+            <p class="p1" id="login_t">登 录</p>
+        </div>
+        <!-- 输入框 -->
+        <div class="lgD">
+            <img src="../static/img/login_user.png" width="20" height="20" alt=""/>
+            <input type="text" placeholder="输入用户名" id="username">
+        </div>
+        <div class="lgD">
+            <img src="../static/img/login_lock.png" width="20" height="20" alt=""/>
+            <input type="text" placeholder="输入用户密码" id="password">
+        </div>
+        <div class="logC">
+            <a id="login_b1" target="_self"><button id="login_b">登 录</button></a>
+        </div>
+        <div class="logT" style="font-size: 14px;">
+            <a href="javascript:void(0);" onclick="zhuce()" id="register">注册用户</a>
+            <a href="javascript:void(0);" id="forget">忘记密码</a>
+        </div>
+    </div>
+</div>
+
+<div class="footer" id="foot">
+  <div class="copyright">
+    <p>Copyright © 2020 leeyoshinari. All Rights Reserved.</p>
+  </div>
+</div>
+<script type="text/javascript">
+    {#function zhuce() {#}
+    {#    reg = document.getElementById('register');#}
+    {#    reg.innerText = '登录已有用户';#}
+    {#    reg.setAttribute('onclick', 'denglu()');#}
+    {#    login1 = document.getElementById('login_t');#}
+    {#    login1.innerText = '注 册';#}
+    {#    login1 = document.getElementById('login_b');#}
+    {#    login1.innerText = '注 册';#}
+    {#    login1 = document.getElementById('login_b1');#}
+    {#    login1.setAttribute('href', '/login');#}
+    {#function denglu() {#}
+    {#    reg = document.getElementById('register');#}
+    {#    reg.innerText = '注册用户';#}
+    {#    reg.setAttribute('onclick', 'zhuce()');#}
+    {#    login1 = document.getElementById('login_t');#}
+    {#    login1.innerText = '登 录';#}
+    {#    login1 = document.getElementById('login_b');#}
+    {#    login1.innerText = '登 录';#}
+    {#    login1 = document.getElementById('login_b1');#}
+    {#    login1.setAttribute('href', '/home');#}
+
+    $("#login_b1").click(function () {
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+        if (username === '' || password === ''){
+            alert('用户名和密码不能为空！');
+            return;
+        }
+        let postdata = {
+            'username': document.getElementById('username').value,
+            'password': password,
+        };
+        console.log(postdata);
+        $(function login_b1 () {
+            $.ajax({
+                type: 'post',
+                url: 'login/',
+                data: postdata,
+                datatype: 'json',
+                success: function (data) {
+                    console.log(data);
+                    if (data['code'] === 0) {
+                        window.location.href = '/home';
+                    }
+                },
+            });
+        });
+    });
+</script>
+</body>
+</html>

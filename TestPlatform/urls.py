@@ -18,6 +18,8 @@ from django.urls import path, include
 from user.views import *
 
 urlpatterns = [
-	path('login/', login),
+	path('', index, name='login'),
+	path('home/', home, name='home'),
+	path('login/', login, name='login')
 	# path('ATI/', include('ATI.urls'), name='ATI')
 ]
