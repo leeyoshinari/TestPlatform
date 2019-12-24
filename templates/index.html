@@ -80,9 +80,15 @@
                 url: 'login/',
                 data: postdata,
                 datatype: 'json',
-                success: function (data) {
+                success: function (data, status, request) {
                     console.log(data);
                     if (data['code'] === 0) {
+                        let r_date = request.getResponseHeader('date');
+                        r_date = new Date(new Date(r_date).getTime() + 7200000);
+                        let userName = data['data']['username'];
+                        let userID = data['data']['userid'];
+                        document.cookie = 'userName='+userName + ';expires=' + r_date + ';path=/';
+                        document.cookie = 'userID='+userID + ';expires=' + r_date + ';path=/';
                         window.location.href = '/home';
                     }
                 },
