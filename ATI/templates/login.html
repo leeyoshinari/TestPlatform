@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>接口自动化测试</title>
-    <link rel="stylesheet" type="text/css" href="../static/css/login.css">
-    <script src="../static/js/jquery.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/login.css">
+    <script src="/static/js/jquery.js"></script>
 </head>
 <body>
 <div class="header" id="head">
@@ -18,19 +18,19 @@
         </div>
         <!-- 输入框 -->
         <div class="lgD">
-            <img src="../static/img/login_user.png" width="20" height="20" alt=""/>
+            <img src="/static/img/login_user.png" width="20" height="20" alt=""/>
             <input type="text" placeholder="输入用户名" id="username">
         </div>
         <div class="lgD">
-            <img src="../static/img/login_lock.png" width="20" height="20" alt=""/>
+            <img src="/static/img/login_lock.png" width="20" height="20" alt=""/>
             <input type="text" placeholder="输入用户密码" id="password">
         </div>
         <div class="logC">
-            <a id="login_b1" target="_self"><button id="login_b">登 录</button></a>
+            <a id="login_b" target="_self"><button>登 录</button></a>
         </div>
         <div class="logT" style="font-size: 14px;">
-            <a href="javascript:void(0);" onclick="zhuce()" id="register">注册用户</a>
-            <a href="javascript:void(0);" id="forget">忘记密码</a>
+            <a href="/user/signin/">注册用户</a>
+            <a href="javascript:void(0);">忘记密码</a>
         </div>
     </div>
 </div>
@@ -41,28 +41,7 @@
   </div>
 </div>
 <script type="text/javascript">
-    {#function zhuce() {#}
-    {#    reg = document.getElementById('register');#}
-    {#    reg.innerText = '登录已有用户';#}
-    {#    reg.setAttribute('onclick', 'denglu()');#}
-    {#    login1 = document.getElementById('login_t');#}
-    {#    login1.innerText = '注 册';#}
-    {#    login1 = document.getElementById('login_b');#}
-    {#    login1.innerText = '注 册';#}
-    {#    login1 = document.getElementById('login_b1');#}
-    {#    login1.setAttribute('href', '/login');#}
-    {#function denglu() {#}
-    {#    reg = document.getElementById('register');#}
-    {#    reg.innerText = '注册用户';#}
-    {#    reg.setAttribute('onclick', 'zhuce()');#}
-    {#    login1 = document.getElementById('login_t');#}
-    {#    login1.innerText = '登 录';#}
-    {#    login1 = document.getElementById('login_b');#}
-    {#    login1.innerText = '登 录';#}
-    {#    login1 = document.getElementById('login_b1');#}
-    {#    login1.setAttribute('href', '/home');#}
-
-    $("#login_b1").click(function () {
+    $("#login_b").click(function () {
         let username = document.getElementById('username').value;
         let password = document.getElementById('password').value;
         if (username === '' || password === ''){
@@ -70,26 +49,26 @@
             return;
         }
         let postdata = {
-            'username': document.getElementById('username').value,
+            'username': username,
             'password': password,
         };
         console.log(postdata);
         $(function login_b1 () {
             $.ajax({
                 type: 'post',
-                url: 'login/',
+                url: '/user/log_in/',
                 data: postdata,
                 datatype: 'json',
                 success: function (data, status, request) {
                     console.log(data);
                     if (data['code'] === 0) {
                         let r_date = request.getResponseHeader('date');
-                        r_date = new Date(new Date(r_date).getTime() + 7200000);
+                        r_date = new Date(new Date(r_date).getTime() - 21600000);
                         let userName = data['data']['username'];
                         let userID = data['data']['userid'];
                         document.cookie = 'userName='+userName + ';expires=' + r_date + ';path=/';
                         document.cookie = 'userID='+userID + ';expires=' + r_date + ';path=/';
-                        window.location.href = '/home';
+                        window.location.href = '/user/project/';
                     }
                 },
             });

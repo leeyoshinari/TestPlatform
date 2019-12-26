@@ -1,0 +1,50 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+body{
+    width: 100%;
+    height: 100%;
+    background-color: #b0cc00;
+}
+.homeList{
+    width: 300px;
+    height: 100px;
+    bottom: 50%;
+    left: 50%;
+    /*background-color: #FFFFFF;*/
+    position: absolute;
+}
+.ati{
+    width: 150px;
+    height: 50px;
+    background-color: dodgerblue;
+    position: absolute;
+}
+.ati p{
+    font-size: 16px;
+    text-align: center;
+}
+#foot {
+	width: 100%;
+	height: 40px;
+	bottom: 0;
+	background-color: #CC9933;
+	position: absolute;
+}
+.copyright {
+	font-family: "Times New Roman";
+	color: #FFFFFF;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	height: 50%;
+	width: 100%;
+	text-align:center;
+}
+
+#foot .copyright p {
+	height: 50%;
+	width: 100%;
+}
