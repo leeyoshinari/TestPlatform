@@ -4,8 +4,11 @@ from django.db import models
 
 
 class UserModel(models.Model):
-	username = models.CharField(max_length=50, default='')
-	password = models.CharField(max_length=50, default='')
+	username = models.CharField(max_length=50, unique=True)
+	password = models.CharField(max_length=50)
+	user_id = models.CharField(max_length=50, default='')
+	create_time = models.DateTimeField()
+	last_login_time = models.DateTimeField()
 
 	class Meta:
 		db_table = 't_user'

@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'ATI',
+    # 'ATI',
     'user',
     # 'Mock',
     'django.contrib.admin',
@@ -119,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Shanghai'  # 'UTC'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -132,8 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'user', 'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 
 # 不进行登录验证的url
-EXCLUDE_URL = ["/login"]
+EXCLUDE_URL = ["user"]

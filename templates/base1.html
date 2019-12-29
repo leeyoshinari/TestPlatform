@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block addcss %}
+    <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+{% endblock %}
+
+{% block addjs %}
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/vendor/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="/static/scripts/klorofil-common.js"></script>
+{% endblock %}
+
+
+{% block addbody %}
+<div id="wrapper">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-default navbar-fixed-top" style="height: 50px">
+        <div class="brand">
+            <a href="#"><h3>接口自动化</h3></a>
+        </div>
+        <div class="container-fluid" style="height: 50px">
+            <!-- <div class="navbar-btn">
+                <button type="button" class="btn-toggle-fullwidth"><i class="lnr lnr-arrow-left-circle"></i></button>
+            </div> -->
+            <div id="navbar-menu">
+                <ul class="nav navbar-nav navbar-right" style="height: 50px">
+                    <li class="dropdown" style="height: 50px">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="height: 50px">
+                            <!-- <img src="/static/img/user.png" class="img-circle" alt="Avatar"> -->
+                            <span>Samuel</span> <!-- <i class="icon-submenu lnr lnr-chevron-down"></i> --></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#"><span>我的信息</span></a></li>
+                            <li><a href="#"><span>修改密码</span></a></li>
+                            <li><a href="#"><span>退出登录</span></a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="sidebar-nav" class="sidebar">
+        <div class="sidebar-scroll">
+            <nav>
+                <ul class="nav">
+                    <li><a href="/index" class=""> <span>主页</span></a></li>
+                    <li><a href="/base/project/" class="">项目管理</a></li>
+                    <li><a href="/base/env/" class="">测试环境管理</a></li>
+                    <li><a href="/base/interface/" class="">接口管理</a></li>
+                    <li><a href="/base/case/" class="">用例管理</a></li>
+                    <li><a href="/base/plan/" class="">测试计划管理</a></li>
+                    <li><a href="/base/plan/" class="">测试结果</a></li>
+                    <!-- <li>
+                        <a href="#system" data-toggle="collapse" class="collapsed">
+                            <span>系统设置</span></a>
+                        <div id="system" class="collapse ">
+                            <ul class="nav">
+                                <li><a href="/base/sign/" class="">签名方式</a></li>
+                            </ul>
+                        </div>
+                    </li> -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <!-- END LEFT SIDEBAR -->
+    <!-- MAIN -->
+    <div class="main">
+        <div class="main-content">
+            <div class="container-fluid">
+                {% block crumbs %}
+                {% endblock %}
+                {% block body %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{#<script>#}
+{#    $(document).ready(function () {#}
+{#        var a_name = $("a.this").text();#}
+{#        var page_name = $("a.this-page").text();#}
+{#        if (a_name) {#}
+{#            $("span:contains(" + a_name + ")").parent('a').removeClass("collapsed");#}
+{#            $("span:contains(" + a_name + ")").parent('a').addClass("active");#}
+{#            if (page_name){#}
+{#                $("a:contains(" + page_name + ")").parent('li').parent('ul').parent('div').removeClass("collapse");#}
+{#                $("a:contains(" + page_name + ")").parent('li').parent('ul').parent('div').addClass("collapse in");#}
+{#                $("a:contains(" + page_name + ")").addClass("active");#}
+{#            }#}
+{#        }#}
+{#    });#}
+{#</script>#}
+{% endblock %}
