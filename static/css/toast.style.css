@@ -67,8 +67,8 @@ i {
     background-color: #ff0905;
     border: 1px solid #ff0905; }
   .toast-item-wrapper.warning {
-    background-color: #bdff24;
-    border: 1px solid #bff011; }
+    background-color: #ffb80c;
+    border: 1px solid #f0bc16; }
   .toast-item-wrapper.notice {
     background-color: #48a9f8;
     border: 1px solid #208ce4; }
@@ -83,7 +83,7 @@ i {
     top: 20px; }
   .toast-item-wrapper.toast-top-center {
     margin: 0 auto;
-    top: 20px;
+    top: 50px;
     left: 40%;
     right: 50%;
   }
@@ -103,7 +103,7 @@ i {
   .toast-item-wrapper p {
     margin: 0; }
   .toast-item-wrapper .toast-message {
-    font-size: 0.87rem;
+    font-size: 16px;
     text-align: center;
   }
   .toast-item-wrapper .toast-progress {

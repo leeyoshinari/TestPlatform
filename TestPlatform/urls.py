@@ -16,14 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
-
-
-def login(request):
-	return redirect('/user/login/')
+from user.views import login
 
 
 urlpatterns = [
 	path('', login, name='login'),
 	path('user/', include('user.urls'), name='user'),
-	# path('ATI/', include('ATI.urls'), name='ATI')
+	path('ATI/', include('ATI.urls'), name='ATI')
 ]

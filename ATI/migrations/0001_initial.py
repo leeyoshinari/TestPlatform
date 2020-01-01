@@ -12,17 +12,18 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='UserModel',
+            name='Project',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('username', models.CharField(max_length=50, unique=True)),
-                ('password', models.CharField(max_length=50)),
-                ('user_id', models.CharField(default='', max_length=50)),
+                ('name', models.CharField(max_length=50)),
+                ('code', models.CharField(max_length=50, unique=True)),
+                ('description', models.CharField(max_length=250)),
+                ('pro_type', models.CharField(max_length=10)),
                 ('create_time', models.DateTimeField()),
-                ('last_login_time', models.DateTimeField()),
+                ('username', models.CharField(max_length=200)),
             ],
             options={
-                'db_table': 't_user',
+                'db_table': 't_projects',
             },
         ),
     ]

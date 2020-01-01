@@ -1,0 +1,59 @@
+{% extends 'base_ati.html' %}
+
+{% block crumbs %}
+    <div class="row">
+        <div class="col-md-12">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="/ATI/home/">主页</a>
+                </li>
+                <li class="active">
+                    <a href="/ATI/project/" class="this-page">项目管理</a>
+                </li>
+            </ol>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel">
+                <div class="panel-heading">
+                   <a href="/ATI/project/add/" class="btn btn-primary">添加项目</a>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th width="20%">项目名称</th>
+                            <th width="10%">项目编码</th>
+                            <th width="30%">项目描述</th>
+                            <th width="15%">创建时间</th>
+                            <th width="25%">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for prj in projects %}
+                            <tr>
+                                <td>{{ prj.name }}</td>
+                                <td>{{ prj.code }}</td>
+                                <td>{{ prj.description }}</td>
+                                <td>{{ prj.create_time }}</td>
+                                <td>
+                                    <a href="/ATI/project/manager?code={{ prj.code }}" class="layui-btn layui-btn-xs">成员管理</a>
+                                    <a href="/ATI/project/update?code={{ prj.code }}" class="layui-btn layui-btn-xs">编辑</a>
+                                    <a href="/ATI/project/delete?code={{ prj.code }}"
+                                       class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

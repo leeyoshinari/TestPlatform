@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    # 'ATI',
+    'ATI',
     'user',
     # 'Mock',
     'django.contrib.admin',
@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'TestPlatform.mymiddleware.AccessAuthMiddleWare',
+    'TestPlatform.mymiddleware.AccessAuthMiddleWare',
 ]
 
 ROOT_URLCONF = 'TestPlatform.urls'
@@ -136,4 +136,4 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 
 # 不进行登录验证的url
-EXCLUDE_URL = ["user"]
+EXCLUDE_URL = ["user/login", "user/sign"]

@@ -1,7 +1,7 @@
 import uuid
 import time
 import datetime
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponseRedirect
 
 # Create your views here.
 
@@ -49,7 +49,7 @@ def sign(request):
 				return JsonResponse({'code': 1, 'msg': '用户已存在，请登录', 'data': None})
 			else:
 				UserModel.objects.create(username=username, password=password, create_time=datetime.datetime.now(),
-				                         last_login_time=datetime.datetime.now())
+				                         user_id='', last_login_time=datetime.datetime.now())
 				return JsonResponse({'code': 0, 'msg': '注册成功', 'data': {'username': username}})
 		else:
 			return JsonResponse({'code': 1, 'msg': '参数异常', 'data': None})
@@ -58,12 +58,4 @@ def sign(request):
 
 
 def logout(request):
-	if request.method == 'POST':
-		if request.POST:
-			username = request.POST.get('username')
-			userid = request.POST.get('password')
-			return JsonResponse({'code': 0, 'msg': '操作成功', 'data': {'username': username}})
-		else:
-			return JsonResponse({'code': 1, 'msg': '传参为空', 'data': None})
-	else:
-		return JsonResponse({'code': 1, 'msg': '请求异常', 'data': None})
+	return None
