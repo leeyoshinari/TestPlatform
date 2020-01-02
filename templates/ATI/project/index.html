@@ -40,7 +40,7 @@
                                 <td>{{ prj.name }}</td>
                                 <td>{{ prj.code }}</td>
                                 <td>{{ prj.description }}</td>
-                                <td>{{ prj.create_time }}</td>
+                                <td>{{ prj.create_time|date:'Y-m-d H:i:s' }}</td>
                                 <td>
                                     <a href="/ATI/project/manager?code={{ prj.code }}" class="layui-btn layui-btn-xs">成员管理</a>
                                     <a href="/ATI/project/update?code={{ prj.code }}" class="layui-btn layui-btn-xs">编辑</a>
@@ -56,4 +56,19 @@
 
         </div>
     </div>
+{% endblock %}
+
+{% block fenye %}
+    {% if projects %}
+        <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+
+        <script type="text/javascript">
+        $(function () {
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }})
+        });
+        function switchPage(divId, page) {
+            console.log(2222);
+        }
+        </script>
+    {% endif %}
 {% endblock %}

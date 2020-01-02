@@ -648,6 +648,8 @@ fieldset[disabled] .btn {
       .panel .panel-heading button i {
         font-size: 14px; }
   .panel .panel-body {
+    max-height: 600px;
+    overflow-y: auto;
     padding-top: 10px;
     padding-bottom: 15px; }
   .panel .panel-note {
@@ -1936,4 +1938,34 @@ table.table-mail tr td {
   position: absolute;
 }
 
+.fenye {
+  bottom: 100px;
+  right: 200px;
+  height: 39px;
+  position: absolute;
+}
+.fenye ul.pagination {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+}
+
+.fenye ul.pagination li {display: inline;}
+
+.fenye ul.pagination li a {
+    color: black;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd;
+}
+
+.fenye ul.pagination li a.active {
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid #4CAF50;
+}
+
+.fenye ul.pagination li a:hover:not(.active) {background-color: #ddd;}
 /*# sourceMappingURL=main.css.map */

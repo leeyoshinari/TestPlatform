@@ -9,6 +9,7 @@ class Project(models.Model):
 	description = models.CharField(max_length=250, default=None)
 	pro_type = models.CharField(max_length=10, default=None)
 	create_time = models.DateTimeField()
+	update_time = models.DateTimeField()
 	username = models.CharField(max_length=200, default=None)
 
 	class Meta:
@@ -21,6 +22,7 @@ class Variables(models.Model):
 	project = models.CharField(max_length=50)
 	description = models.CharField(max_length=250, default=None)
 	create_time = models.DateTimeField()
+	update_time = models.DateTimeField()
 
 	class Meta:
 		db_table = 't_variable'
