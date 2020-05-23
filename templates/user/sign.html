@@ -27,7 +27,7 @@
             <a id="login_b" target="_self"><button>注 册</button></a>
         </div>
         <div class="logT">
-            <a href="/user/login/">登录已有用户</a>
+            <a href="{% url 'user:login' %}">登录已有用户</a>
             <a href="javascript:void(0);">忘记密码</a>
         </div>
     </div>
@@ -53,14 +53,14 @@
         $(function login_b1 () {
             $.ajax({
                 type: 'post',
-                url: '/user/sign/',
+                url: {% url 'user:sign' %},
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
                         alert('注册成功，请重新登录！');
-                        window.location.href = '/user/login/';
+                        window.location.href = {% url 'user:login' %};
                     }
                     else {
                         $.Toast(data['msg'], 'error')

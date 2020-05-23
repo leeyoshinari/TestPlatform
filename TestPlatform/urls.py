@@ -18,9 +18,8 @@ from django.urls import path, include
 from django.shortcuts import redirect
 from user.views import login
 
-
 urlpatterns = [
-	path('', login, name='login'),
-	path('user/', include('user.urls'), name='user'),
-	path('ATI/', include('ATI.urls'), name='ATI')
+    path('', login, name='login'),  # 主页登录
+    path('user/', include('user.urls'), name='user'),  # 和用户相关
+    path('ATI/', include('ATI.urls'), name='ATI')		# 和接口相关
 ]

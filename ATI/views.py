@@ -11,6 +11,11 @@ def home(request):
 
 
 def project(request):
+	"""
+	查询当前用户下所有的项目
+	:param request:
+	:return:
+	"""
 	if request.method == 'GET':
 		page_num = request.GET.get('pageNum')
 		if page_num:
@@ -18,15 +23,15 @@ def project(request):
 		else:
 			page_num = 1
 		username = request.COOKIES.get('userName')
-		start_index = (page_num - 1) * 10
+		start_index = (page_num - 1) * 1
 		end_index = page_num * 10
-		total_num = Project.objects.filter(pro_type='ATI', username__contains=',' + username + ',').count()
-		projects = Project.objects.filter(pro_type='ATI', username__contains=',' + username + ',').order_by('-update_time')[start_index:end_index]
-		return render(request, 'ATI/project/index.html', context={'projects': projects, 'page_num': page_num,
-		                                                          'total_num': math.ceil(total_num/1)})
+		total_num = Project.objects.filter(pro_type='ATI', username__contains=username).count()
+		print(total_num)
+		projects = Project.objects.filter(pro_type='ATI', username__contains=username).order_by('-update_time')[start_index:end_index]
+		print(projects)
+		return render(request, 'ATI/project/index.html', context={'projects': projects, 'page_num': page_num, 'total_num': math.ceil(total_num/10)})
 
 
-@xframe_options_sameorigin
 def add_project(request):
 	if request.method == 'POST':
 		code = request.POST.get('code')
@@ -38,7 +43,7 @@ def add_project(request):
 				username = request.COOKIES.get('userName')
 				desc = request.POST.get('description')
 				Project.objects.create(name=name, code=code, description=desc, pro_type='ATI',
-				                       create_time=time_strftime(), update_time=time_strftime(), username=',' + username + ',')
+				                       create_time=time_strftime(), update_time=time_strftime(), username=username)
 				return JsonResponse({'code': 0, 'msg': '项目创建成功', 'data': None})
 
 		else:
@@ -47,7 +52,6 @@ def add_project(request):
 		return render(request, 'ATI/project/add.html')
 
 
-@xframe_options_sameorigin
 def update_project(request):
 	if request.method == 'POST':
 		r = Project.objects.get(code=request.POST.get('code'))
@@ -98,3 +102,11 @@ def manager_project(request):
 				r.username = ','.join(usernames) + ','
 				r.save()
 				return JsonResponse({'code': 0, 'msg': '添加成功', 'data': None})
+
+
+def variables(request):
+	return render(request, 'ATI/variable/index.html')
+
+
+def add_variable(request):
+	return render(request, 'ATI/variable/add.html')

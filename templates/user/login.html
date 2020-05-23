@@ -23,7 +23,7 @@
             <a id="login_b" target="_self"><button>登 录</button></a>
         </div>
         <div class="logT">
-            <a href="/user/sign/">注册用户</a>
+            <a href="{% url 'user:sign' %}">注册用户</a>
             <a href="javascript:void(0);">忘记密码</a>
         </div>
     </div>
@@ -44,14 +44,14 @@
         $(function login_b1 () {
             $.ajax({
                 type: 'post',
-                url: '/user/login/',
+                url: "{% url 'user:login' %}",
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     console.log(data);
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = '/user/tester/';
+                        window.location.href = "{% url 'user:home' %}";
                     }
                     else {
                         $.Toast(data['msg'], 'error');

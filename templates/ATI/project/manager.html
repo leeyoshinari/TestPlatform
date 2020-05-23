@@ -5,10 +5,10 @@
     <div class="col-md-12">
         <ol class="breadcrumb">
             <li>
-                <a href="/ATI/home/">主页</a>
+                <a href="{% url 'ATI:home' %}">主页</a>
             </li>
             <li class="active">
-                <a class="this-page" href="/ATI/project/">项目管理</a>
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
             <li class="active">
                 <a class="">成员管理</a>
@@ -69,16 +69,16 @@
             'code': code,
             'isadd': '1',
         };
-        $(function login_b1 () {
+        $(function add_user () {
             $.ajax({
                 type: 'post',
-                url: '/ATI/project/manager/',
+                url: {% url 'ATI:manager_project' %},
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = '/ATI/project/';
+                        window.location.href = {% url 'ATI:project' %};
                     }
                     else {
                         $.Toast(data['msg'], 'error');
@@ -100,16 +100,16 @@
             'code': code,
             'isadd': '0',
         };
-        $(function login_b1 () {
+        $(function del_user () {
             $.ajax({
                 type: 'post',
-                url: '/ATI/project/manager/',
+                url: {% url 'ATI:manager_project' %},
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = '/ATI/project/';
+                        window.location.href = {% url 'ATI:project' %};
                     }
                     else {
                         $.Toast(data['msg'], 'error');

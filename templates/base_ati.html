@@ -35,7 +35,7 @@
                         <ul class="dropdown-menu">
                             <li><a href="#"><span>我的信息</span></a></li>
                             <li><a href="#"><span>修改密码</span></a></li>
-                            <li><a href="/user/login/"><span>退出登录</span></a></li>
+                            <li><a href="{% url 'user:login' %}"><span>退出登录</span></a></li>
                         </ul>
                     </li>
                 </ul>
@@ -47,11 +47,11 @@
         <div class="sidebar-scroll">
             <nav>
                 <ul class="nav">
-                    <li><a href="/ATI/home/" class=""> <span>主页</span></a></li>
-                    <li><a href="/ATI/project/" class="">项目管理</a></li>
+                    <li><a href="{% url 'ATI:home' %}" class=""> <span>主页</span></a></li>
+                    <li><a href="{% url 'ATI:project' %}" class="">项目管理</a></li>
                     <li><a href="/base/interface/" class="">接口管理</a></li>
                     <li><a href="/base/case/" class="">用例管理</a></li>
-                    <li><a href="/ATI/global/" class="">全局变量</a></li>
+                    <li><a href="{% url 'ATI:variables' %}" class="">全局变量</a></li>
                     <li><a href="/base/plan/" class="">测试计划管理</a></li>
                     <li><a href="/base/plan/" class="">测试结果</a></li>
                     <!-- <li>

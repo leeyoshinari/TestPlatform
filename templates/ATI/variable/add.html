@@ -5,13 +5,13 @@
     <div class="col-md-12">
         <ol class="breadcrumb">
             <li>
-                <a href="{% url 'ATI:home' %}">主页</a>
+                <a href="/ATI/home/">主页</a>
             </li>
             <li class="active">
-                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+                <a href="/ATI/variable/" class="this-page">全局变量</a>
             </li>
             <li class="active">
-                <a class="">添加项目</a>
+                <a class="">添加变量</a>
             </li>
         </ol>
     </div>
@@ -26,59 +26,46 @@
                 <h3 class="panel-title">添加项目</h3>
             </div>
             <div class="panel-body">
-                <div class="form-horizontal">
+                <form class="form-horizontal" method="post" target="myform">
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" class="form-control">
+                            <input type="text" name="name" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目编码</label>
                         <div class="col-sm-6">
-                            <input type="text" id="code" class="form-control">
+                            <input type="text" name="code" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目描述</label>
                         <div class="col-sm-6">
-                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
+                            <textarea name="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-offset-2 col-sm-6">
-                            <button id="Save" class="btn btn-primary">保存</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
                         </div>
                     </div>
-                </div>
+                </form>
+                <iframe name="myform" id="myform" style="display:none"></iframe>
             </div>
         </div>
     </div>
 </div>
 <script type="text/javascript">
-    $("#Save").click(function () {
-        let name = document.getElementById('name').value;
-        let code = document.getElementById('code').value;
-        let desc = document.getElementById('description').value;
-        let postdata = {
-            name: name,
-            code: code,
-            description: desc,
-        };
-        console.log(postdata);
-        $.ajax({
-            type: 'post',
-            url: "{% url 'ATI:add_project' %}",
-            data: postdata,
-            datatype: 'json',
-            success: function (data) {
-                if(data['code'] === 1) {
-                    $.Toast(data['msg'], 'warning');
-                } else {
-                    window.location.href="{% url 'ATI:project' %}";
-                }
-            },
-        });
-    });
+    $("#submit").click();
+    $("#myform").load(function () {
+        let text = $(this).contents().find("body").text();
+        let result = $.parseJSON(text);
+        if(result['code'] === 1) {
+            $.Toast(result['msg'], 'warning');
+        } else {
+            window.location.href='/ATI/project/';
+        }
+    })
 </script>
 {% endblock%}
