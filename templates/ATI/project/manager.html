@@ -30,19 +30,30 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" class="form-control" readonly="readonly" value ={{ projects.name }}>
+                            <input type="text" id="name" class="form-control" readonly="readonly" value ={{ projects }}>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <!--<div class="form-group">
                         <label class="col-sm-2 control-label">项目编码</label>
                         <div class="col-sm-6">
                             <input type="text" id="code" class="form-control" readonly="readonly" value ={{ projects.code }}>
                         </div>
-                    </div>
+                    </div>-->
                     <div class="form-group">
                         <label class="col-sm-2 control-label">用户名</label>
                         <div class="col-sm-6">
                             <input type="text" id="username" class="form-control" placeholder="请输入用户名">
+                            <!--<select id="username" class="form-control">
+                                {% for user in user_list %}
+                                    <option value="{{ user.user_name }}">{{ user.user_name }}</option>
+                                {% endfor %}
+                            </select>-->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">项目成员</label>
+                        <div class="col-sm-6">
+                            <textarea type="text" class="form-control" readonly="readonly">{{ user_list }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -58,27 +69,28 @@
 </div>
 <script type="text/javascript">
     $("#add_user").click(function () {
-        let code = document.getElementById('code').value;
+        let name = document.getElementById('name').value;
         let username = document.getElementById('username').value;
+        console.log(name);
         if (username === ''){
             $.Toast('用户名不能为空！', 'error');
             return;
         }
         let postdata = {
             'username': username,
-            'code': code,
+            'name': name,
             'isadd': '1',
         };
         $(function add_user () {
             $.ajax({
                 type: 'post',
-                url: {% url 'ATI:manager_project' %},
+                url: "{% url 'ATI:manager_project' %}",
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = {% url 'ATI:project' %};
+                        window.location.href = "{% url 'ATI:project' %}";
                     }
                     else {
                         $.Toast(data['msg'], 'error');
@@ -89,7 +101,7 @@
     });
 
     $("#del_user").click(function () {
-        let code = document.getElementById('code').value;
+        let name = document.getElementById('name').value;
         let username = document.getElementById('username').value;
         if (username === ''){
             $.Toast('用户名不能为空！', 'error');
@@ -97,19 +109,19 @@
         }
         let postdata = {
             'username': username,
-            'code': code,
+            'name': name,
             'isadd': '0',
         };
         $(function del_user () {
             $.ajax({
                 type: 'post',
-                url: {% url 'ATI:manager_project' %},
+                url: '{% url 'ATI:manager_project' %}',
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = {% url 'ATI:project' %};
+                        window.location.href = '{% url 'ATI:project' %}';
                     }
                     else {
                         $.Toast(data['msg'], 'error');

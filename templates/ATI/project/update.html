@@ -30,15 +30,15 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" class="form-control" autocomplete="off" value ={{ projects.name }}>
+                            <input type="text" id="name" class="form-control" readonly="readonly" value ={{ projects.name }}>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <!--<div class="form-group">
                         <label class="col-sm-2 control-label">项目编码</label>
                         <div class="col-sm-6">
                             <input type="text" id="code" class="form-control" readonly="readonly" value ={{ projects.code }}>
                         </div>
-                    </div>
+                    </div>-->
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目描述</label>
                         <div class="col-sm-6">
@@ -58,23 +58,21 @@
 <script type="text/javascript">
     $("#update").click(function () {
         let name = document.getElementById('name').value;
-        let code = document.getElementById('code').value;
         let desc = document.getElementById('description').value;
         let postdata = {
             name: name,
-            code: code,
             description: desc,
         };
         $.ajax({
             type: 'post',
-            url: {% url 'ATI:update_project' %},
+            url: "{% url 'ATI:update_project' %}",
             data: postdata,
             datatype: 'json',
             success: function (data) {
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'warning');
                 } else {
-                    window.location.href={% url 'ATI:project' %};
+                    window.location.href="{% url 'ATI:project' %}";
                 }
             },
         });

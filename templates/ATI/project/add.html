@@ -30,15 +30,15 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" class="form-control">
+                            <input type="text" id="name" placeholder="项目名称" class="form-control">
                         </div>
                     </div>
-                    <div class="form-group">
+                    <!--<div class="form-group">
                         <label class="col-sm-2 control-label">项目编码</label>
                         <div class="col-sm-6">
                             <input type="text" id="code" class="form-control">
                         </div>
-                    </div>
+                    </div>-->
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目描述</label>
                         <div class="col-sm-6">
@@ -58,14 +58,11 @@
 <script type="text/javascript">
     $("#Save").click(function () {
         let name = document.getElementById('name').value;
-        let code = document.getElementById('code').value;
         let desc = document.getElementById('description').value;
         let postdata = {
             name: name,
-            code: code,
             description: desc,
         };
-        console.log(postdata);
         $.ajax({
             type: 'post',
             url: "{% url 'ATI:add_project' %}",

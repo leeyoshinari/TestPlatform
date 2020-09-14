@@ -16,4 +16,7 @@ urlpatterns = [
     path('project/delete/', del_project, name='del_project'),
     path('project/manager/', manager_project, name='manager_project'),
     path('variable/', variables, name='variables'),
+    path('variable/add/', add_variable, name='add_variable'),
+    path('variable/delete/', delete_variable, name='delete_variable'),
+    path('variable/edit/', edit_variable, name='edit_variable'),
 ]

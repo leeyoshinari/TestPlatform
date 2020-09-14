@@ -5,10 +5,10 @@
     <div class="col-md-12">
         <ol class="breadcrumb">
             <li>
-                <a href="/ATI/home/">主页</a>
+                <a href="{% url 'ATI:home' %}">主页</a>
             </li>
             <li class="active">
-                <a href="/ATI/variable/" class="this-page">全局变量</a>
+                <a href="{% url 'ATI:variables' %}" class="this-page">全局变量</a>
             </li>
         </ol>
 
@@ -17,38 +17,48 @@
 {% endblock %}
 
 {% block body %}
+{% load dict_filter %}
+{% load compare_filter %}
 <div class="row">
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <a href="/ATI/variable/add/" class="btn btn-primary">添加全局变量</a>
+                <a href="{% url 'ATI:add_variable' %}" class="btn btn-primary">添加全局变量</a>
+                <select id="project" style="width: 250px; height: 32px;margin-left: 950px;">
+                    <option value='' disabled selected style='display:none;'>请选择项目</option>
+                    {% for pro in project_list %}
+                        {% if project_id|is_equal:pro.0 %}
+                            <option value="{{ pro.0 }}" selected="selected" >{{ pro.1 }}</option>
+                        {% else %}
+                            <option value="{{ pro.0 }}">{{ pro.1 }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <a href="#" class="btn btn-primary" id="allvars">搜索</a>
             </div>
             <div class="panel-body">
                 <table class="table table-bordered">
                     <thead>
                     <tr>
-                        <th>变量名</th>
-                        <th>变量值</th>
-                        <th>所属项目</th>
-                        <th>描述</th>
-                        <th>操作</th>
+                        <th width="10%">变量名</th>
+                        <th width="15%">变量值</th>
+                        <th width="20%">所属项目</th>
+                        <th width="25%">描述</th>
+                        <th width="15%">创建时间</th>
+                        <th width="15%">操作</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for variable in global_list %}
                     <tr>
-                        <td>{{ env.env_id }}</td>
-                        <td>{{ env.env_name }}</td>
-                        <td>{{ env.url }}</td>
-                        <td>{{ env.project }}</td>
-                        <td>{{ env.private_key }}</td>
-                        <td>{{ env.description }}</td>
+                        <td>{{ variable.name }}</td>
+                        <td>{{ variable.value }}</td>
+                        <td>{{ projects|get_item:variable.project_id }}</td>
+                        <td>{{ variable.description }}</td>
+                        <td>{{ variable.create_time|date:'Y-m-d H:i:s' }}</td>
                         <td>
-                            <a href="/env_update?env_id={{ env.env_id }}" class="layui-btn layui-btn-xs"
-                               lay-event="edit">编辑</a>
-                            <a href="/env_delete?env_id={{ env.env_id }}"
-                               class="layui-btn layui-btn-danger layui-btn-xs"
-                               lay-event="del">删除</a>
+                            <a href="{% url 'ATI:edit_variable' %}?name={{ variable.name }}&projectId={{ variable.project_id }}" class="layui-btn layui-btn-xs">编辑</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_variable' %}?name={{ variable.name }}&projectId={{ variable.project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -58,5 +68,29 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block fenye %}
+    {% if global_list %}
+        <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+
+        <script type="text/javascript">
+        $(function () {
+            let pro_id = document.getElementById('project').value;
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:variables' %}?projectId=' + pro_id + '&pageNum=')
+        });
+
+        function openResult(del_url){
+            let r = confirm("亲，您确定删除项目吗？")
+            if (r === true) {
+                window.location.href=del_url;
+            } else {}
+        }
+
+        $("#allvars").click(function () {
+            let project_id = document.getElementById('project').value;
+                window.location.href='{% url 'ATI:variables' %}?projectId=' + project_id;
+        })
+        </script>
+    {% endif %}
 {% endblock %}

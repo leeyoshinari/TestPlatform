@@ -27,10 +27,9 @@
                     <table class="table table-bordered">
                         <thead>
                         <tr>
-                            <th width="20%">项目名称</th>
-                            <th width="10%">项目编码</th>
+                            <th width="25%">项目名称</th>
                             <th width="30%">项目描述</th>
-                            <th width="15%">创建时间</th>
+                            <th width="20%">创建时间</th>
                             <th width="25%">操作</th>
                         </tr>
                         </thead>
@@ -38,14 +37,13 @@
                         {% for prj in projects %}
                             <tr>
                                 <td>{{ prj.name }}</td>
-                                <td>{{ prj.code }}</td>
                                 <td>{{ prj.description }}</td>
                                 <td>{{ prj.create_time|date:'Y-m-d H:i:s' }}</td>
                                 <td>
-                                    <a href="{% url 'ATI:manager_project' %}?code={{ prj.code }}" class="layui-btn layui-btn-xs">成员管理</a>
-                                    <a href="{% url 'ATI:update_project' %}?code={{ prj.code }}" class="layui-btn layui-btn-xs">编辑</a>
-                                    <a href="#" onclick="openResult('{% url 'ATI:del_project' %}?code={{ prj.code }}')"
-                                       class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                                    <a href="{% url 'ATI:manager_project' %}?name={{ prj.name }}" class="layui-btn layui-btn-xs">成员管理</a>
+                                    <a href="{% url 'ATI:update_project' %}?name={{ prj.name }}" class="layui-btn layui-btn-xs">编辑项目</a>
+                                    <a href="#" onclick="openResult('{% url 'ATI:del_project' %}?name={{ prj.name }}')"
+                                       class="layui-btn layui-btn-danger layui-btn-xs">删除项目</a>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -64,7 +62,7 @@
 
         <script type="text/javascript">
         $(function () {
-            PagingManage($("#paging"), {{ total_num }}, {{ page_num }})
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:project' %}?pageNum=')
         });
         function openResult(del_url){
 		let r = confirm("亲，您确定删除项目吗？")

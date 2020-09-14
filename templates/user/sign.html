@@ -53,14 +53,14 @@
         $(function login_b1 () {
             $.ajax({
                 type: 'post',
-                url: {% url 'user:sign' %},
+                url: "{% url 'user:sign' %}",
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
                         alert('注册成功，请重新登录！');
-                        window.location.href = {% url 'user:login' %};
+                        window.location.href = "{% url 'user:login' %}";
                     }
                     else {
                         $.Toast(data['msg'], 'error')

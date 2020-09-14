@@ -3,26 +3,15 @@ from django.db import models
 # Create your models here.
 
 
-class Project(models.Model):
-	name = models.CharField(max_length=50, default=None)
-	code = models.CharField(max_length=50, unique=True, primary_key=True)
-	description = models.CharField(max_length=250, default=None)
-	pro_type = models.CharField(max_length=10, default=None)
-	create_time = models.DateTimeField()
-	update_time = models.DateTimeField()
-	username = models.CharField(max_length=200, default=None)
-
-	class Meta:
-		db_table = 't_projects'
-
-
 class Variables(models.Model):
-	name = models.CharField(max_length=50, default=None)
-	value = models.CharField(max_length=50, default=None)
-	project = models.CharField(max_length=50)
-	description = models.CharField(max_length=250, default=None)
-	create_time = models.DateTimeField()
-	update_time = models.DateTimeField()
+	name = models.CharField(max_length=50, default=None, verbose_name='变量名')
+	value = models.CharField(max_length=50, default=None, verbose_name='变量值')
+	project_id = models.CharField(max_length=50, default=None, verbose_name='变量对应的项目id')
+	description = models.CharField(max_length=250, default=None, verbose_name='变量描述')
+	created_by = models.CharField(max_length=20, default=None, verbose_name='创建人')
+	updated_by = models.CharField(max_length=20, default=None, verbose_name='更新人')
+	create_time = models.DateTimeField(verbose_name='创建时间')
+	update_time = models.DateTimeField(verbose_name='更新时间')
 
 	class Meta:
-		db_table = 't_variable'
+		db_table = 'ati_group_variable'

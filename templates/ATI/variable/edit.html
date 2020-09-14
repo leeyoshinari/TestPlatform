@@ -30,29 +30,25 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">变量名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" placeholder="变量名称" class="form-control">
+                            <input type="text" id="name" readonly="readonly" class="form-control" value="{{ variables.name }}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">变量值</label>
                         <div class="col-sm-6">
-                            <input type="text" id="values" placeholder="变量值" class="form-control">
+                            <input type="text" id="values" class="form-control" value="{{ variables.value }}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">所属项目</label>
                         <div class="col-sm-6">
-                            <select id="project" class="form-control">
-                                {% for pro in project_list %}
-                                    <option value="{{ pro.0 }}">{{ pro.1 }}</option>
-                                {% endfor %}
-                            </select>
+                            <input type="text" id="project" readonly="readonly" class="form-control" value="{{ project_name }}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目描述</label>
                         <div class="col-sm-6">
-                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
+                            <textarea id="description" class="form-control" rows="3">{{ variables.description }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -70,23 +66,22 @@
         let name = document.getElementById('name').value;
         let desc = document.getElementById('description').value;
         let values = document.getElementById('values').value;
-        let project_id = document.getElementById('project').value;
         let postdata = {
             name: name,
             value: values,
-            project_id: project_id,
+            project_id: {{ variables.project_id }},
             description: desc,
         };
         $.ajax({
             type: 'post',
-            url: "{% url 'ATI:add_variable' %}",
+            url: "{% url 'ATI:edit_variable' %}",
             data: postdata,
             datatype: 'json',
             success: function (data) {
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'warning');
                 } else {
-                    window.location.href="{% url 'ATI:variables' %}?projectId=" + project_id;
+                    window.location.href="{% url 'ATI:variables' %}?projectId=" + {{ variables.project_id }};
                 }
             },
         });

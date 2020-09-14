@@ -5,8 +5,6 @@ import re
 from django.shortcuts import redirect
 from django.utils.deprecation import MiddlewareMixin
 from .settings import EXCLUDE_URL
-from user.models import UserModel
-
 
 exclude_path = [re.compile(item) for item in EXCLUDE_URL]
 
@@ -21,9 +19,7 @@ class AccessAuthMiddleWare(MiddlewareMixin):
             if u in url_path:
                 return None
 
-        username = request.COOKIES.get('userName')
-        user_id = request.COOKIES.get('userId')
-        if UserModel.objects.filter(username=username, user_id=user_id):
+        if request.user.is_authenticated:
             return None
         else:
             return redirect('/user/login')

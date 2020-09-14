@@ -3,15 +3,16 @@
  * @param obj 页码标签对象
  * @param  pageNum 分页总数
  * @param currentpage number 当前页
+ * @param fenye_url
  */
 
-function PagingManage(obj, pageNum, currentpage) {
+function PagingManage(obj, pageNum, currentpage, fenye_url) {
     if (obj) {
         let showPageNum = 7;//显示多少个页码
 
         let pagehtml = "";
         let divId = "" + obj.attr('id');
-        let fenye_url = "/ATI/project?pageNum="
+        //let fenye_url = fenye_url;
 
         //只有一页内容
         if (pageNum <= 1) {

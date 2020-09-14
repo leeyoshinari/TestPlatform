@@ -7,7 +7,7 @@ import datetime
 
 
 def time_strftime():
-	return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+	return time.strftime('%Y-%m-%d %H:%M:%S')
 
 
 def datetime_strftime():
