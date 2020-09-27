@@ -44,14 +44,14 @@
         $(function login_b1 () {
             $.ajax({
                 type: 'post',
-                url: "{% url 'user:login' %}",
+                url: "{% url 'login' %}",
                 data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     console.log(data);
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = "{% url 'user:home' %}";
+                        window.location.href = "{% url 'home' %}";
                     }
                     else {
                         $.Toast(data['msg'], 'error');

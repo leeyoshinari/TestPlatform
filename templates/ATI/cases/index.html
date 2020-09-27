@@ -1,0 +1,116 @@
+{% extends 'base_ati.html' %}
+
+{% block crumbs %}
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{% url 'ATI:home' %}">主页</a>
+            </li>
+            <li class="active">
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+            </li>
+            <li class="active">
+                <a class="">用例管理</a>
+            </li>
+        </ol>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel">
+            <div class="panel-heading">
+                <a href="{% url 'ATI:add_case' %}?projectId={{ project_id }}" class="btn btn-primary">添加用例</a>
+                <input type="text" id="content" style="width: 250px; height: 32px;margin-left: 950px;" placeholder="用例名称">
+                <a href="#" class="btn btn-primary" id="search">搜索</a>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th width="20%">用例名称</th>
+                        <th width="15%">所属项目</th>
+                        <th width="20%">用例描述</th>
+                        <th width="12%">是否执行</th>
+                        <th width="13%">更新时间</th>
+                        <th width="20%">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for case in case_list %}
+                    <tr>
+                        <td>{{ case.name }}</td>
+                        <td>{{ project_name }}</td>
+                        <td>{{ case.description }}</td>
+                        <td>
+                            {% if case.is_run > 0 %}
+                                <input name="{{ case.id }}" type="radio" value="1" checked onclick="set_is_run('{{ case.id }}', 1)">执行
+                                <input name="{{ case.id }}" type="radio" value="0" onclick="set_is_run('{{ case.id }}', 0)">不执行
+                            {% else %}
+                                <input name="{{ case.id }}" type="radio" value="1" onclick="set_is_run('{{ case.id }}', 1)">执行
+                                <input name="{{ case.id }}" type="radio" value="0" checked onclick="set_is_run('{{ case.id }}', 0)">不执行
+                            {% endif %}
+                        </td>
+                        <td>{{ case.update_time|date:'Y-m-d H:i:s' }}</td>
+                        <td>
+                            <a href="{% url 'ATI:show_case_interface' %}?Id={{ case.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">查看接口</a>
+                            <a href="{% url 'ATI:edit_case' %}?Id={{ case.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑用例</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_case' %}?Id={{ case.id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除用例</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block fenye %}
+    {% if case_list %}
+        <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+
+        <script type="text/javascript">
+        $(function () {
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:cases' %}?projectId=' + {{ project_id }} + '&pageNum=')
+        });
+
+        function openResult(del_url){
+            let r = confirm("亲，您确定删除接口吗？")
+            if (r === true) {
+                window.location.href=del_url;
+            } else {}
+        }
+
+        function set_is_run(caseId, isRun){
+            let post_data = {
+                caseId: caseId,
+                isRun: isRun,
+            }
+            $.ajax({
+                type: 'post',
+                url: "{% url 'ATI:set_is_run' %}",
+                data: post_data,
+                datatype: 'json',
+                success: function(data){
+                    if(data['code'] === 0) {
+                        $.Toast(data['msg'], 'success');
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                }
+            })
+        }
+
+        $("#search").click(function () {
+            let content = document.getElementById('content').value;
+            window.location.href='{% url 'ATI:cases' %}?projectId={{ project_id }}&Content=' + content;
+        });
+        </script>
+    {% endif %}
+{% endblock %}

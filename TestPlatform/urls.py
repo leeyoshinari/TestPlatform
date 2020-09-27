@@ -16,11 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
-from user.views import login
+from user.views import login, home
 
 urlpatterns = [
-    path('admin/', admin.site.urls, name='admin'),
-    path('', login, name='login'),  # 主页登录
+    path('admin', admin.site.urls, name='admin'),
+    path('login', login, name='login'),  # 主页登录
     path('user/', include('user.urls'), name='user'),  # 和用户相关
-    path('ATI/', include('ATI.urls'), name='ATI')		# 和接口相关
+    path('ATI/', include('ATI.urls'), name='ATI'),		# 和接口相关
+    path('home', home, name='home'),
 ]

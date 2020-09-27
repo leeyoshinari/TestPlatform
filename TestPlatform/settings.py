@@ -141,6 +141,9 @@ urls = getConfig('excludeURL').split(',')
 EXCLUDE_URL = [url.strip() for url in urls]
 
 BASE_LOG_DIR = os.path.join(BASE_DIR, "logs")
+if not os.path.exists(BASE_LOG_DIR):
+    os.mkdir(BASE_LOG_DIR)
+
 LOGGING = {
     'version': 1,  # 保留字
     'disable_existing_loggers': True,  # 禁用已经存在的logger实例

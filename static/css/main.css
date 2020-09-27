@@ -648,7 +648,7 @@ fieldset[disabled] .btn {
       .panel .panel-heading button i {
         font-size: 14px; }
   .panel .panel-body {
-    max-height: 600px;
+    max-height: 850px;
     overflow-y: auto;
     padding-top: 10px;
     padding-bottom: 15px; }
@@ -1891,7 +1891,7 @@ table.table-mail tr td {
   width: 100%;
   height: 100%;
   position: fixed;
-  background-color: #ee7700;
+  background-color: #f3f5f8;
 }
 
 .all_index .my_detail {
@@ -1913,14 +1913,14 @@ table.table-mail tr td {
   left: 70px;
   width: 300px;
   height: 200px;
-  background-color: #0b5b97;
+  background-color: #FFFFFF;
   position: absolute;
 }
 .my_detail .web {
   left: 480px;
   width: 300px;
   height: 200px;
-  background-color: #0b5b97;
+  background-color: #FFFFFF;
   position: absolute;
 }
 .my_detail .mock {

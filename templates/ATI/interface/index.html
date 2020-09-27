@@ -1,0 +1,88 @@
+{% extends 'base_ati.html' %}
+
+{% block crumbs %}
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{% url 'ATI:home' %}">主页</a>
+            </li>
+            <li class="active">
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+            </li>
+            <li class="active">
+                <a class="">接口管理</a>
+            </li>
+        </ol>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel">
+            <div class="panel-heading">
+                <a href="{% url 'ATI:add_interface' %}?projectId={{ project_id }}" class="btn btn-primary">添加接口</a>
+                <input type="text" id="content" style="width: 250px; height: 32px;margin-left: 950px;" placeholder="接口名称">
+                <a href="#" class="btn btn-primary" id="search">搜索</a>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th width="20%">接口名称</th>
+                        <th width="20%">接口url</th>
+                        <th width="15%">所属项目</th>
+                        <th width="20%">描述</th>
+                        <th width="12%">更新时间</th>
+                        <th width="13%">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for interface in interface_list %}
+                    <tr>
+                        <td>{{ interface.name }}</td>
+                        <td>{{ interface.interface }}</td>
+                        <td>{{ project_name }}</td>
+                        <td>{{ interface.description }}</td>
+                        <td>{{ interface.update_time|date:'Y-m-d H:i:s' }}</td>
+                        <td>
+                            <a href="{% url 'ATI:edit_interface' %}?Id={{ interface.interface_id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑</a>
+                            <a href="{% url 'ATI:edit_interface' %}?Id={{ interface.interface_id }}&projectId={{ project_id }}&copy=1" class="layui-btn layui-btn-xs" style="margin-right: 10px;">复制</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_interface' %}?Id={{ interface.interface_id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block fenye %}
+    {% if interface_list %}
+        <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+
+        <script type="text/javascript">
+        $(function () {
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:interface' %}?projectId=' + {{ project_id }} + '&pageNum=')
+        });
+
+        function openResult(del_url){
+            let r = confirm("亲，您确定删除接口吗？")
+            if (r === true) {
+                window.location.href=del_url;
+            } else {}
+        }
+
+        $("#search").click(function () {
+            let content = document.getElementById('content').value;
+            window.location.href='{% url 'ATI:interface' %}?projectId={{ project_id }}&Content=' + content;
+        })
+        </script>
+    {% endif %}
+{% endblock %}

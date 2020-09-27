@@ -22,4 +22,4 @@ class AccessAuthMiddleWare(MiddlewareMixin):
         if request.user.is_authenticated:
             return None
         else:
-            return redirect('/user/login')
+            return redirect('/login')

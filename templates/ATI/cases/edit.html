@@ -1,0 +1,182 @@
+{% extends 'base_ati.html' %}
+
+{% block crumbs %}
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{% url 'ATI:home' %}">主页</a>
+            </li>
+            <li class="active">
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+            </li>
+            <li class="active">
+                <a class="" href="{% url 'ATI:interface' %}?projectId={{ project_id }}">接口管理</a>
+            </li>
+            <li class="active">
+                <a class="">添加接口</a>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel">
+            <div class="panel-heading">
+                <h3 class="panel-title">添加接口</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">接口ID</label>
+                        <div class="col-sm-6">
+                            <input type="text" id="interface_id" value="{{ interface.interface_id }}" class="form-control" readonly="readonly">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">接口名称</label>
+                        <div class="col-sm-6">
+                            <input type="text" id="name" value="{{ interface.name }}" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">接口URL</label>
+                        <div class="col-sm-6">
+                            <input type="text" id="interface" value="{{ interface.interface }}" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">接口协议</label>
+                        <div class="col-sm-6" style="width: 150px;">
+                            <select id="protocol" class="form-control" style="width: 120px;">
+                                <option value="http" selected="selected">http</option>
+                                <option value="https">https</option>
+                            </select>
+                        </div>
+                        <label class="col-sm-2 control-label" style="width: 9%">请求方法</label>
+                        <div class="col-sm-6" style="width: 150px;">
+                            <select id="method" class="form-control" style="width: 120px;">
+                                <option value="get" selected="selected">get</option>
+                                <option value="post">post</option>
+                                <option value="put">put</option>
+                                <option value="delete">delete</option>
+                            </select>
+                        </div>
+                        <label class="col-sm-2 control-label" style="width: 9%">超时时间</label>
+                        <div class="col-sm-6" style="width: 150px;">
+                            <input type="text" id="timeout" value="{{ interface.timeout}}" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">请求头</label>
+                        <div class="col-sm-6">
+                            <input type="text" id="header" value="{{ interface.header }}" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">请求参数</label>
+                        <div class="col-sm-6">
+                            <textarea id="parameter" class="form-control" rows="3">{{ interface.parameter }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">前置处理器</label>
+                        <div class="col-sm-6">
+                            <textarea id="pre_process" class="form-control" rows="6">{{ interface.pre_process }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">后置处理器</label>
+                        <div class="col-sm-6">
+                            <textarea id="post_process" class="form-control" rows="6">{{ interface.post_process }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">预期结果</label>
+                        <div class="col-sm-6">
+                            <textarea id="except_result" class="form-control" rows="2">{{ interface.except_result }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">断言内容</label>
+                        <div class="col-sm-6" style="width: 450px;">
+                            <input type="text" id="assert_result" value="{{ interface.assert_result }}" class="form-control" style="width: 100%">
+                        </div>
+                        <label class="col-sm-2 control-label" style="width: 9%">断言方法</label>
+                        <div class="col-sm-6" style="width: 150px;">
+                            <select id="assert_method" class="form-control" style="width: 120px;">
+                                <option value="contain" selected="selected">包含</option>
+                                <option value="contained">被包含</option>
+                                <option value="equal">等于</option>
+                                <option value="unequal">不等于</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">接口描述</label>
+                        <div class="col-sm-6">
+                            <textarea id="description" class="form-control" rows="1">{{ interface.description }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-6">
+                            <button id="Save" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $("#Save").click(function () {
+        let interface_id = document.getElementById('interface_id').value;
+        let name = document.getElementById('name').value;
+        let interface1 = document.getElementById('interface').value;
+        let protocol = document.getElementById('protocol').value;
+        let method = document.getElementById('method').value;
+        let timeout = document.getElementById('timeout').value;
+        let header = document.getElementById('header').value;
+        let parameter = document.getElementById('parameter').value;
+        let pre_process = document.getElementById('pre_process').value;
+        let post_process = document.getElementById('post_process').value;
+        let except_result = document.getElementById('except_result').value;
+        let assert_result = document.getElementById('assert_result').value;
+        let assert_method = document.getElementById('assert_method').value;
+        let description = document.getElementById('description').value;
+        let postdata = {
+            name: name,
+            interface_id: interface_id,
+            project_id: {{ project_id }},
+            interface: interface1,
+            protocol: protocol,
+            method: method,
+            timeout: timeout,
+            header: header,
+            parameter: parameter,
+            pre_process: pre_process,
+            post_process: post_process,
+            except_result: except_result,
+            assert_result: assert_result,
+            assert_method: assert_method,
+            description: description,
+        };
+        $.ajax({
+            type: 'post',
+            url: "{% url 'ATI:edit_interface' %}",
+            data: postdata,
+            datatype: 'json',
+            success: function (data) {
+                if(data['code'] === 1) {
+                    $.Toast(data['msg'], 'error');
+                } else {
+                    window.location.href="{% url 'ATI:interface' %}?projectId=" + {{ project_id }};
+                }
+            },
+        });
+    });
+</script>
+{% endblock%}

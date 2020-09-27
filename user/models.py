@@ -8,6 +8,8 @@ class Projects(models.Model):
 	name = models.CharField(max_length=150, default=None, verbose_name='项目名称')
 	description = models.CharField(max_length=250, default=None, verbose_name='项目描述')
 	type = models.CharField(max_length=10, default=None, verbose_name='项目对应的测试类型，ATI-接口自动化，UI-UI自动化')
+	created_by = models.CharField(max_length=20, default=None, verbose_name='创建人')
+	updated_by = models.CharField(max_length=20, default=None, verbose_name='更新人')
 	create_time = models.DateTimeField(verbose_name='创建时间')
 	update_time = models.DateTimeField(verbose_name='更新时间')
 

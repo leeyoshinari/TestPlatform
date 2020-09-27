@@ -1,0 +1,123 @@
+{% extends 'base_ati.html' %}
+
+{% block crumbs %}
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{% url 'ATI:home' %}">主页</a>
+            </li>
+            <li class="active">
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+            </li>
+            <li class="active">
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
+            </li>
+            <li class="active">
+                <a class="">新增测试计划</a>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel">
+            <div class="panel-heading">
+                <h3 class="panel-title">添加测试计划</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">测试计划名称</label>
+                        <div class="col-sm-6">
+                            <input type="text" id="name" placeholder="测试计划名称" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">测试计划描述</label>
+                        <div class="col-sm-6">
+                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">定时任务设置</label>
+                        <div class="col-sm-6" style="width: 170px;">
+                            <select id="timeing" class="form-control" style="width: 150px;" onchange="set_time()">
+                                <option value="0" selected="selected">仅执行一次</option>
+                                <option value="1">周期性执行</option>
+                                <option value="2">每天定时执行</option>
+                            </select>
+                        </div>
+                        <label class="col-sm-2 control-label" id="time_set_label" style="display: none;">时间间隔</label>
+                        <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content">
+                            <input type="text" id="time_set" placeholder="单位：分钟" class="form-control">
+                        </div>
+                        <label class="col-sm-2 control-label" id="time_set_label1" style="display: none;">定时设置</label>
+                        <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content1">
+                            <input type="time" id="time_set1" value="" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-6">
+                            <button id="Save" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $("#Save").click(function () {
+        let name = document.getElementById('name').value;
+        let desc = document.getElementById('description').value;
+        let postdata = {
+            name: name,
+            description: desc,
+            project_id: "{{ project_id }}",
+        };
+        $.ajax({
+            type: 'post',
+            url: "{% url 'ATI:add_case' %}",
+            data: postdata,
+            datatype: 'json',
+            success: function (data) {
+                if(data['code'] === 1) {
+                    $.Toast(data['msg'], 'warning');
+                } else {
+                    window.location.href="{% url 'ATI:plans' %}?projectId={{ project_id }}";
+                }
+            },
+        });
+    });
+
+    function set_time() {
+        let timing = document.getElementById('timeing').value;
+        let label = document.getElementById('time_set_label');
+        let label1 = document.getElementById('time_set_label1');
+        let time_set = document.getElementById('time_set_content');
+        let time_set1 = document.getElementById('time_set_content1');
+        if (timing === "1"){
+            label.style.display = "block";
+            label1.style.display = "none";
+            time_set.style.display = "block";
+            time_set1.style.display = "none";
+        } else if (timing === "2") {
+            let current_time = new Date();
+            document.getElementById('time_set1').value = current_time.getHours() + ':' + current_time.getMinutes();
+            label1.style.display = "block";
+            label.style.display = "none";
+            time_set1.style.display = "block";
+            time_set.style.display = "none";
+        } else {
+            label.style.display = "none";
+            label1.style.display = "none";
+            time_set.style.display = "none";
+            time_set1.style.display = "none";
+        }
+    }
+</script>
+{% endblock%}

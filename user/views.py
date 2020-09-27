@@ -9,7 +9,8 @@ logger = logging.getLogger('django')
 
 
 def home(request):
-    return render(request, 'user/home.html')
+    user_name = request.user.username
+    return render(request, 'user/home.html', context={'username': user_name})
 
 
 def login(request):
@@ -72,7 +73,7 @@ def login(request):
 def logout(request):
     auth.logout(request)
     logger.info(f"{request.user.username}登出成功！")
-    return redirect('/')
+    return redirect('login')
 
 
 def changePwd(request):
