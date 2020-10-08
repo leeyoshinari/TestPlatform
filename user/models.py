@@ -26,7 +26,7 @@ class UserProject(models.Model):
 
 	class Meta:
 		db_table = 'auth_user_project'
-		indexes = [models.Index(fields=['project_id'])]
+		indexes = [models.Index(fields=['type', 'create_time'])]
 
 
 class Results(models.Model):

@@ -103,17 +103,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">断言内容</label>
+                        <label class="col-sm-2 control-label">实际结果</label>
                         <div class="col-sm-6" style="width: 450px;">
-                            <input type="text" id="assert_result" value="{{ interface.assert_result }}" class="form-control" style="width: 100%">
+                            <input type="text" id="true_result" value="{{ interface.true_result }}" class="form-control" style="width: 100%">
                         </div>
                         <label class="col-sm-2 control-label" style="width: 9%">断言方法</label>
                         <div class="col-sm-6" style="width: 150px;">
                             <select id="assert_method" class="form-control" style="width: 120px;">
                                 <option value="contain" selected="selected">包含</option>
-                                <option value="contained">被包含</option>
                                 <option value="equal">等于</option>
-                                <option value="unequal">不等于</option>
                             </select>
                         </div>
                     </div>
@@ -165,25 +163,9 @@
             let a = document.getElementById('assert_method');
             a.options[0].selected = true;
             a.options[1].selected = false;
-            a.options[2].selected = false;
-            a.options[3].selected = false;
-        } else if ("{{ interface.assert_method }}" === "contained") {
-            let a = document.getElementById('assert_method');
-            a.options[1].selected = true;
-            a.options[0].selected = false;
-            a.options[2].selected = false;
-            a.options[3].selected = false;
         } else if ("{{ interface.assert_method }}" === "equal") {
             let a = document.getElementById('assert_method');
-            a.options[2].selected = true;
-            a.options[1].selected = false;
-            a.options[0].selected = false;
-            a.options[3].selected = false;
-        } else if ("{{ interface.assert_method }}" === "unequal") {
-            let a = document.getElementById('assert_method');
-            a.options[3].selected = true;
-            a.options[1].selected = false;
-            a.options[2].selected = false;
+            a.options[1].selected = true;
             a.options[0].selected = false;
         }
     })
@@ -200,7 +182,7 @@
         let pre_process = document.getElementById('pre_process').value;
         let post_process = document.getElementById('post_process').value;
         let except_result = document.getElementById('except_result').value;
-        let assert_result = document.getElementById('assert_result').value;
+        let true_result = document.getElementById('true_result').value;
         let assert_method = document.getElementById('assert_method').value;
         let description = document.getElementById('description').value;
         let postdata = {
@@ -216,7 +198,7 @@
             pre_process: pre_process,
             post_process: post_process,
             except_result: except_result,
-            assert_result: assert_result,
+            true_result: true_result,
             assert_method: assert_method,
             description: description,
         };
