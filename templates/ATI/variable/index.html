@@ -8,7 +8,13 @@
                 <a href="{% url 'ATI:home' %}">主页</a>
             </li>
             <li class="active">
-                <a href="{% url 'ATI:variables' %}" class="this-page">全局变量</a>
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+            </li>
+            <li class="active">
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
+            </li>
+            <li class="active">
+                <a class="" href="{% url 'ATI:variables' %}?Id={{ plan_id }}&projectId={{ project_id }}">设置变量</a>
             </li>
         </ol>
 
@@ -17,32 +23,18 @@
 {% endblock %}
 
 {% block body %}
-{% load dict_filter %}
-{% load compare_filter %}
 <div class="row">
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <a href="{% url 'ATI:add_variable' %}" class="btn btn-primary">添加全局变量</a>
-                <select id="project" style="width: 250px; height: 32px;margin-left: 950px;">
-                    <option value='' disabled selected style='display:none;'>请选择项目</option>
-                    {% for pro in project_list %}
-                        {% if project_id|is_equal:pro.0 %}
-                            <option value="{{ pro.0 }}" selected="selected" >{{ pro.1 }}</option>
-                        {% else %}
-                            <option value="{{ pro.0 }}">{{ pro.1 }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                <a href="#" class="btn btn-primary" id="allvars">搜索</a>
+                <a href="{% url 'ATI:add_variable' %}?Id={{ plan_id }}&projectId={{ project_id }}" class="btn btn-primary">新增全局变量</a>
             </div>
             <div class="panel-body">
                 <table class="table table-bordered">
                     <thead>
                     <tr>
                         <th width="10%">变量名</th>
-                        <th width="15%">变量值</th>
-                        <th width="20%">所属项目</th>
+                        <th width="20%">变量值</th>
                         <th width="25%">描述</th>
                         <th width="15%">创建时间</th>
                         <th width="15%">操作</th>
@@ -53,12 +45,11 @@
                     <tr>
                         <td>{{ variable.name }}</td>
                         <td>{{ variable.value }}</td>
-                        <td>{{ projects|get_item:variable.project_id }}</td>
                         <td>{{ variable.description }}</td>
                         <td>{{ variable.create_time|date:'Y-m-d H:i:s' }}</td>
                         <td>
-                            <a href="{% url 'ATI:edit_variable' %}?name={{ variable.name }}&projectId={{ variable.project_id }}" class="layui-btn layui-btn-xs">编辑</a>
-                            <a href="#" onclick="openResult('{% url 'ATI:delete_variable' %}?name={{ variable.name }}&projectId={{ variable.project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                            <a href="{% url 'ATI:edit_variable' %}?name={{ variable.name }}&planId={{ variable.plan_id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs">编辑</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_variable' %}?name={{ variable.name }}&planId={{ variable.plan_id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -76,21 +67,29 @@
 
         <script type="text/javascript">
         $(function () {
-            let pro_id = document.getElementById('project').value;
-            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:variables' %}?projectId=' + pro_id + '&pageNum=')
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:variables' %}?Id={{ plan_id }}&projectId={{ project_id }}&pageNum=')
         });
 
         function openResult(del_url){
-            let r = confirm("亲，您确定删除项目吗？")
+            let r = confirm("亲，您确定删除全局变量吗？")
             if (r === true) {
-                window.location.href=del_url;
+                $.ajax({
+                    type: 'get',
+                    url: del_url,
+                    datatype: 'json',
+                    success: function (data) {
+                        if (data['code'] === 0) {
+                            $.Toast(data['msg'], 'success');
+                            window.location.href = "{% url 'ATI:variables' %}?Id={{ plan_id }}&projectId={{ project_id }}";
+                        } else if (data['code'] === 1)  {
+                            $.Toast(data['msg'], 'error');
+                        } else {
+                            $.Toast(data['msg'], 'warning');
+                        }
+                    }
+                })
             } else {}
         }
-
-        $("#allvars").click(function () {
-            let project_id = document.getElementById('project').value;
-            window.location.href='{% url 'ATI:variables' %}?projectId=' + project_id;
-        })
         </script>
     {% endif %}
 {% endblock %}

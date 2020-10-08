@@ -11,10 +11,13 @@
                 <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
             <li class="active">
-                <a class="" href="{% url 'ATI:cases' %}?projectId={{ project_id }}">用例管理</a>
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
             </li>
             <li class="active">
-                <a class="">编辑用例</a>
+                <a class="" href="{% url 'ATI:variables' %}?Id={{ plan_id }}&projectId={{ project_id }}">设置变量</a>
+            </li>
+            <li class="active">
+                <a class="">编辑变量</a>
             </li>
         </ol>
     </div>
@@ -31,21 +34,21 @@
             <div class="panel-body">
                 <div class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">用例名称</label>
+                        <label class="col-sm-2 control-label">变量名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" class="form-control" value="{{ cases.name }}">
+                            <input type="text" id="name" class="form-control" value="{{ variables.name }}" readonly="readonly">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">所属项目</label>
+                        <label class="col-sm-2 control-label">变量值</label>
                         <div class="col-sm-6">
-                            <input type="text" id="project" readonly="readonly" class="form-control" value="{{ project_name }}">
+                            <input type="text" id="values"  class="form-control" value="{{ variables.value }}">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">用例描述</label>
+                        <label class="col-sm-2 control-label">变量描述</label>
                         <div class="col-sm-6">
-                            <textarea id="description" class="form-control" rows="3">{{ cases.description }}</textarea>
+                            <textarea id="description" class="form-control" rows="3">{{ variables.description }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -62,22 +65,24 @@
     $("#Save").click(function () {
         let name = document.getElementById('name').value;
         let desc = document.getElementById('description').value;
+        let values = document.getElementById('values').value;
         let postdata = {
             name: name,
-            Id: "{{ cases.id }}",
-            project_id: "{{ cases.project_id }}",
+            value: values,
+            plan_id: {{ plan_id }},
             description: desc,
         };
         $.ajax({
             type: 'post',
-            url: "{% url 'ATI:edit_case' %}",
+            url: "{% url 'ATI:edit_variable' %}",
             data: postdata,
             datatype: 'json',
             success: function (data) {
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'warning');
                 } else {
-                    window.location.href="{% url 'ATI:cases' %}?projectId=" + {{ cases.project_id }};
+                    $.Toast(data['msg'], 'success');
+                    window.location.href="{% url 'ATI:variables' %}?Id={{ plan_id }}&projectId={{ project_id }}";
                 }
             },
         });

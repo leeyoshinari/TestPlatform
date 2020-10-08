@@ -21,16 +21,16 @@
         <div class="col-md-12">
             <div class="panel">
                 <div class="panel-heading">
-                   <a href="{% url 'ATI:add_project' %}" class="btn btn-primary">添加项目</a>
+                   <a href="{% url 'ATI:add_project' %}" class="btn btn-primary">新增项目</a>
                 </div>
                 <div class="panel-body">
                     <table class="table table-bordered">
                         <thead>
                         <tr>
                             <th width="20%">项目名称</th>
-                            <th width="30%">项目描述</th>
+                            <th width="27%">项目描述</th>
                             <th width="12%">创建时间</th>
-                            <th width="20%">项目管理</th>
+                            <th width="23%">项目管理</th>
                             <th width="18%">操作</th>
                         </tr>
                         </thead>
@@ -42,7 +42,7 @@
                                 <td>{{ prj.create_time|date:'Y-m-d H:i:s' }}</td>
                                 <td>
                                     <a href="{% url 'ATI:interface' %}?projectId={{ prj.id }}" class="layui-btn layui-btn-xs" style="margin-left: 13px;">接口管理</a>
-                                    <a href="{% url 'ATI:cases' %}?projectId={{ prj.id }}" class="layui-btn layui-btn-xs" style="margin-left: 10px;">用例管理</a>
+                                    <a href="{% url 'ATI:scenes' %}?projectId={{ prj.id }}" class="layui-btn layui-btn-xs" style="margin-left: 10px;">测试场景管理</a>
                                     <a href="{% url 'ATI:plans' %}?projectId={{ prj.id }}" class="layui-btn layui-btn-danger layui-btn-xs" style="margin-left: 10px;">测试计划管理</a>
                                 </td>
                                 <td>
@@ -73,7 +73,21 @@
         function openResult(del_url){
 		let r = confirm("亲，您确定删除项目吗？")
 		if (r === true) {
-		window.location.href=del_url;
+		    $.ajax({
+                    type: 'get',
+                    url: del_url,
+                    datatype: 'json',
+                    success: function (data) {
+                        if (data['code'] === 0) {
+                            $.Toast(data['msg'], 'success');
+                            window.location.href = "{% url 'ATI:project' %}";
+                        } else if (data['code'] === 1)  {
+                            $.Toast(data['msg'], 'error');
+                        } else {
+                            $.Toast(data['msg'], 'warning');
+                        }
+                    }
+                })
 		} else {
 		}
 	}

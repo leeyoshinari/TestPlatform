@@ -1,5 +1,64 @@
 {% extends 'base_ati.html' %}
 
+{% block crumbs %}
+<link rel="stylesheet" href="/static/css/tankuang.css">
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{% url 'ATI:home' %}">数据概览</a>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
 {% block body %}
-<p>dfsafasdf</p>
+{% load myFilter %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel">
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th width="20%">项目名称</th>
+                        <th width="10%">测试计划数</th>
+                        <th width="10%">测试场景数</th>
+                        <th width="10%">测试用例数</th>
+                        <th width="10%">执行次数</th>
+                        <th width="10%">执行用例总数</th>
+                        <th width="10%">执行成功率</th>
+                        <th width="10%">执行用时</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in all_list %}
+                    <tr>
+                        <td>{{ p.project_name }}</td>
+                        <td>{{ p.plan_num }}</td>
+                        <td>{{ p.scene_num }}</td>
+                        <td>{{ p.case_num }}</td>
+                        <td>{{ p.times }}</td>
+                        <td>{{ p.total_case }}</td>
+                        <td>{{ p.total_success |calc_radio:p.total_case }}%</td>
+                        <td>{{ p.total_interval |calc_time }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block fenye %}
+    <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+
+    <script type="text/javascript">
+    $(function () {
+        PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:home' %}?&pageNum=')
+    });
+    </script>
 {% endblock %}

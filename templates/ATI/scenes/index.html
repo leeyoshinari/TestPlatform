@@ -11,7 +11,7 @@
                 <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
             <li class="active">
-                <a class="" href="{% url 'ATI:interface' %}?projectId={{ project_id }}">接口管理</a>
+                <a class="" href="{% url 'ATI:scenes' %}?projectId={{ project_id }}">测试场景管理</a>
             </li>
         </ol>
 
@@ -24,9 +24,9 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <a href="{% url 'ATI:add_interface' %}?projectId={{ project_id }}" class="btn btn-primary">新增接口</a>
+                <a href="{% url 'ATI:add_scene' %}?projectId={{ project_id }}" class="btn btn-primary">新增测试场景</a>
                 {% if content == ""  %}
-                    <input type="text" id="content" style="width: 250px; height: 32px;margin-left: 950px;" placeholder="接口名称">
+                    <input type="text" id="content" style="width: 250px; height: 32px;margin-left: 950px;" placeholder="测试场景名称">
                 {% else %}
                     <input type="text" id="content" style="width: 250px; height: 32px;margin-left: 950px;" value="{{ content }}">
                 {% endif %}
@@ -36,26 +36,24 @@
                 <table class="table table-bordered">
                     <thead>
                     <tr>
-                        <th width="20%">接口名称</th>
-                        <th width="20%">接口url</th>
+                        <th width="20%">测试场景名称</th>
                         <th width="15%">所属项目</th>
-                        <th width="20%">描述</th>
-                        <th width="12%">更新时间</th>
-                        <th width="13%">操作</th>
+                        <th width="20%">测试场景描述</th>
+                        <th width="13%">更新时间</th>
+                        <th width="20%">操作</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for interface in interface_list %}
+                    {% for scene in scene_list %}
                     <tr>
-                        <td>{{ interface.name }}</td>
-                        <td>{{ interface.interface }}</td>
+                        <td>{{ scene.name }}</td>
                         <td>{{ project_name }}</td>
-                        <td>{{ interface.description }}</td>
-                        <td>{{ interface.update_time|date:'Y-m-d H:i:s' }}</td>
+                        <td>{{ scene.description }}</td>
+                        <td>{{ scene.update_time|date:'Y-m-d H:i:s' }}</td>
                         <td>
-                            <a href="{% url 'ATI:edit_interface' %}?Id={{ interface.interface_id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑</a>
-                            <a href="{% url 'ATI:edit_interface' %}?Id={{ interface.interface_id }}&projectId={{ project_id }}&copy=1" class="layui-btn layui-btn-xs" style="margin-right: 10px;">复制</a>
-                            <a href="#" onclick="openResult('{% url 'ATI:delete_interface' %}?Id={{ interface.interface_id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                            <a href="{% url 'ATI:show_scene_interface' %}?Id={{ scene.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">查看接口</a>
+                            <a href="{% url 'ATI:edit_scene' %}?Id={{ scene.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑场景</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_scene' %}?Id={{ scene.id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除场景</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -72,7 +70,7 @@
 
     <script type="text/javascript">
     $(function () {
-        PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:interface' %}?projectId=' + {{ project_id }} + '&pageNum=')
+        PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:scenes' %}?projectId=' + {{ project_id }} + '&pageNum=')
     });
 
     function openResult(del_url){
@@ -85,7 +83,7 @@
                 success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = "{% url 'ATI:interface' %}?projectId={{ project_id }}";
+                        window.location.href = "{% url 'ATI:scenes' %}?projectId={{ project_id }}";
                     } else if (data['code'] === 1)  {
                         $.Toast(data['msg'], 'error');
                     } else {
@@ -96,15 +94,35 @@
         } else {}
     }
 
+    function set_is_run(sceneId, isRun){
+        let post_data = {
+            sceneId: sceneId,
+            isRun: isRun,
+        }
+        $.ajax({
+            type: 'post',
+            url: "{% url 'ATI:set_is_run' %}",
+            data: post_data,
+            datatype: 'json',
+            success: function(data){
+                if(data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                } else {
+                    $.Toast(data['msg'], 'error');
+                }
+            }
+        })
+    }
+
     $("#content").keypress(function (event) {
         if (event.keyCode === 13){
             search_all();
         }
-    })
+    });
 
     function search_all() {
         let content = document.getElementById('content').value;
-        window.location.href='{% url 'ATI:interface' %}?projectId={{ project_id }}&Content=' + content;
+        window.location.href='{% url 'ATI:scenes' %}?projectId={{ project_id }}&Content=' + content;
     }
     </script>
 {% endblock %}

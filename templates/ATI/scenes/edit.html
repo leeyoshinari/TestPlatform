@@ -10,6 +10,9 @@
             <li class="active">
                 <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
+            <li class="active">
+                <a class="" href="{% url 'ATI:scenes' %}?projectId={{ project_id }}">测试场景管理</a>
+            </li>
         </ol>
     </div>
 </div>
@@ -20,26 +23,26 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <h3 class="panel-title">添加项目</h3>
+                <h3 class="panel-title">编辑测试场景</h3>
             </div>
             <div class="panel-body">
                 <div class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">项目名称</label>
+                        <label class="col-sm-2 control-label">测试场景名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" placeholder="项目名称" class="form-control">
+                            <input type="text" id="name" class="form-control" value="{{ scenes.name }}">
                         </div>
                     </div>
-                    <!--<div class="form-group">
-                        <label class="col-sm-2 control-label">项目编码</label>
-                        <div class="col-sm-6">
-                            <input type="text" id="code" class="form-control">
-                        </div>
-                    </div>-->
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">项目描述</label>
+                        <label class="col-sm-2 control-label">所属项目</label>
                         <div class="col-sm-6">
-                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
+                            <input type="text" id="project" readonly="readonly" class="form-control" value="{{ project_name }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">测试场景描述</label>
+                        <div class="col-sm-6">
+                            <textarea id="description" class="form-control" rows="3">{{ scenes.description }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -58,18 +61,21 @@
         let desc = document.getElementById('description').value;
         let postdata = {
             name: name,
+            Id: "{{ scenes.id }}",
+            project_id: "{{ scenes.project_id }}",
             description: desc,
         };
         $.ajax({
             type: 'post',
-            url: "{% url 'ATI:add_project' %}",
+            url: "{% url 'ATI:edit_scene' %}",
             data: postdata,
             datatype: 'json',
             success: function (data) {
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'warning');
                 } else {
-                    window.location.href="{% url 'ATI:project' %}";
+                    $.Toast(data['msg'], 'success');
+                    window.location.href="{% url 'ATI:scenes' %}?projectId={{ scenes.project_id }}";
                 }
             },
         });

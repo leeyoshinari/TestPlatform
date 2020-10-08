@@ -11,10 +11,16 @@
                 <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
             <li class="active">
-                <a class="" href="{% url 'ATI:cases' %}?projectId={{ project_id }}">用例管理</a>
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
             </li>
             <li class="active">
-                <a class="">查看接口</a>
+                <a class="" href="{% url 'ATI:show_plan_and_scene' %}?Id={{ plan_id }}&projectId={{ project_id }}">查看场景</a>
+            </li>
+            <li class="active" href="{% url 'ATI:add_plan_and_scene' %}?projectId={{ project_id }}&planId={{ plan_id }}">
+                <a class="">添加场景</a>
+            </li>
+            <li class="active">
+                <a class="">编辑场景</a>
             </li>
         </ol>
 
@@ -27,7 +33,7 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <a href="{% url 'ATI:add_case_interface' %}?projectId={{ project_id }}&caseId={{ case_id }}" class="btn btn-primary">增加接口</a>
+                <a href="{% url 'ATI:add_case_interface' %}?projectId={{ project_id }}&caseId={{ case_id }}" class="btn btn-primary">添加接口</a>
             </div>
             <div class="panel-body">
                 <table class="table table-bordered">
@@ -40,24 +46,24 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for case in case_interfaces %}
+                    {% for scene in scene_interfaces %}
                     <tr>
-                        <td>{{ case.interface.name }}</td>
-                        <td>{{ case.case.name }}</td>
+                        <td>{{ scene.interface.name }}</td>
+                        <td>{{ scene.case.name }}</td>
                         <td>
-                             {% if case.is_run > 0 %}
-                                <input name="{{ case.id }}" type="radio" value="1" checked onclick="set_is_run('{{ case.id }}', 1)">执行
-                                <input name="{{ case.id }}" type="radio" value="0" onclick="set_is_run('{{ case.id }}', 0)">不执行
+                             {% if scene.is_run > 0 %}
+                                <input name="{{ scene.id }}" type="radio" value="1" checked onclick="set_is_run('{{ scene.id }}', 1)">执行
+                                <input name="{{ scene.id }}" type="radio" value="0" onclick="set_is_run('{{ scene.id }}', 0)">不执行
                             {% else %}
-                                <input name="{{ case.id }}" type="radio" value="1" onclick="set_is_run('{{ case.id }}', 1)">执行
-                                <input name="{{ case.id }}" type="radio" value="0" checked onclick="set_is_run('{{ case.id }}', 0)">不执行
+                                <input name="{{ scene.id }}" type="radio" value="1" onclick="set_is_run('{{ scene.id }}', 1)">执行
+                                <input name="{{ scene.id }}" type="radio" value="0" checked onclick="set_is_run('{{ scene.id }}', 0)">不执行
                             {% endif %}
                         </td>
                         <td>
-                            <a href="#" onclick="move_up_down('{{ case.interface_id }}', '{{ case.case_id }}', 1)" class="layui-btn layui-btn-xs" style="margin-right: 10px;">上移</a>
-                            <a href="#" onclick="move_up_down('{{ case.interface_id }}', '{{ case.case_id }}', 0)" class="layui-btn layui-btn-xs" style="margin-right: 10px;">下移</a>
-                            <a href="{% url 'ATI:edit_interface_from_case' %}?Id={{ case.interface_id }}&projectId={{ project_id }}&caseId={{ case.case_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑</a>
-                            <a href="#" onclick="openResult('{% url 'ATI:delete_interface_from_case' %}?Id={{ case.id }}&caseId={{ case.case_id }}&interfaceId={{ case.interface_id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                            <a href="#" onclick="move_up_down('{{ scene.interface_id }}', '{{ scene.case_id }}', 1)" class="layui-btn layui-btn-xs" style="margin-right: 10px;">上移</a>
+                            <a href="#" onclick="move_up_down('{{ scene.interface_id }}', '{{ scene.case_id }}', 0)" class="layui-btn layui-btn-xs" style="margin-right: 10px;">下移</a>
+                            <a href="{% url 'ATI:edit_interface_from_case' %}?Id={{ scene.interface_id }}&projectId={{ project_id }}&caseId={{ scene.case_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_interface_from_case' %}?Id={{ scene.id }}&caseId={{ scene.case_id }}&interfaceId={{ scene.interface_id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -70,18 +76,31 @@
 {% endblock %}
 
 {% block fenye %}
-    {% if case_interfaces %}
+    {% if scene_interfaces %}
         <div class="fenye"><ul id="paging" class="pagination"></ul></div>
 
         <script type="text/javascript">
         $(function () {
-            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:show_case_interface' %}?projectId={{ project_id }}&Id={{ case_id }}&pageNum=')
+            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:show_case_interface' %}?projectId={{ project_id }}&Id={{ scene_id }}&pageNum=')
         });
 
         function openResult(del_url){
             let r = confirm("亲，您确定从用例中删除接口吗？")
             if (r === true) {
-                window.location.href=del_url;
+                $.ajax({
+                    type: 'get',
+                    url: del_url,
+                    datatype: 'json',
+                    success: function (data) {
+                        if (data['code'] === 0) {
+                            $.Toast(data['msg'], 'success');
+                        } else if (data['code'] === 1)  {
+                            $.Toast(data['msg'], 'error');
+                        } else {
+                            $.Toast(data['msg'], 'warning');
+                        }
+                    }
+                })
             } else {}
         }
 
@@ -119,7 +138,7 @@
                 success: function(data){
                     if(data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href="{% url 'ATI:show_case_interface' %}?Id={{ case_id }}&projectId={{ project_id }}"
+                        window.location.href="{% url 'ATI:edit_scene_from_plan' %}?Id={{ scene_id }}&projectId={{ project_id }}"
                     } else {
                         $.Toast(data['msg'], 'error');
                     }

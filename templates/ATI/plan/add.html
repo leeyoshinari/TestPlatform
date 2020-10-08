@@ -13,9 +13,6 @@
             <li class="active">
                 <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
             </li>
-            <li class="active">
-                <a class="">新增测试计划</a>
-            </li>
         </ol>
     </div>
 </div>
@@ -26,7 +23,7 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <h3 class="panel-title">添加测试计划</h3>
+                <h3 class="panel-title">新增测试计划</h3>
             </div>
             <div class="panel-body">
                 <div class="form-horizontal">
@@ -39,16 +36,17 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">测试计划描述</label>
                         <div class="col-sm-6">
-                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
+                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">定时任务设置</label>
                         <div class="col-sm-6" style="width: 170px;">
-                            <select id="timeing" class="form-control" style="width: 150px;" onchange="set_time()">
-                                <option value="0" selected="selected">仅执行一次</option>
-                                <option value="1">周期性执行</option>
-                                <option value="2">每天定时执行</option>
+                            <select id="timing" class="form-control" style="width: 150px;" onchange="set_time()">
+                                <option value="0" selected="selected">立即执行</option>
+                                <option value="1">仅执行一次</option>
+                                <option value="2">周期性执行</option>
+                                <option value="3">每天定时执行</option>
                             </select>
                         </div>
                         <label class="col-sm-2 control-label" id="time_set_label" style="display: none;">时间间隔</label>
@@ -58,6 +56,33 @@
                         <label class="col-sm-2 control-label" id="time_set_label1" style="display: none;">定时设置</label>
                         <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content1">
                             <input type="time" id="time_set1" value="" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">邮件设置</label>
+                        <div class="col-sm-6" style="width: 170px;">
+                            <select id="sending" class="form-control" style="width: 150px;" onchange="set_email()">
+                                <option value="0" selected="selected">不发送邮件</option>
+                                <option value="1">总是发送</option>
+                                <option value="2">仅失败发送</option>
+                                <option value="3">仅成功发送</option>
+                            </select>
+                        </div>
+                        <label class="col-sm-2 control-label" id="receiver_label" style="display: none;">收件人组名</label>
+                        <div class="col-sm-6" id="receiver_content" style="width: 220px; display: none;">
+                            <input type="text" id="receiver_name" placeholder="例如：baidu_all" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group" id="subject_div" style="display: none;">
+                        <label class="col-sm-2 control-label">邮件标题</label>
+                        <div class="col-sm-6">
+                            <input type="text" id="subject" placeholder="邮件标题" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group" id="receiver_email_label" style="display: none;">
+                        <label class="col-sm-2 control-label">收件人邮箱</label>
+                        <div class="col-sm-6">
+                            <textarea id="receiver_email" placeholder="收件人邮箱，多个收件人用英文逗号分割" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -74,14 +99,43 @@
     $("#Save").click(function () {
         let name = document.getElementById('name').value;
         let desc = document.getElementById('description').value;
+        let timing = document.getElementById('timing').value;
+        let time_set = document.getElementById('time_set').value;
+        let time_set1 = document.getElementById('time_set1').value;
+        let sending = document.getElementById('sending').value;
+        let receiver_name = document.getElementById('receiver_name').value;
+        let subject = document.getElementById('subject').value;
+        let receiver_email = document.getElementById('receiver_email').value;
+
+        if (timing === "0") {
+            time_set = "";
+            time_set1 = "";
+        } else if (timing === "2") {
+            time_set1 = "";
+        } else {
+            time_set = "";
+        }
+
+        if (sending === "0") {
+            receiver_name = "";
+            subject = "";
+            receiver_email = "";
+        }
         let postdata = {
             name: name,
             description: desc,
+            timing: timing,
+            interval: time_set,
+            time_setting: time_set1,
+            sending: sending,
+            receiver_name: receiver_name,
+            subject: subject,
+            receiver_email: receiver_email,
             project_id: "{{ project_id }}",
         };
         $.ajax({
             type: 'post',
-            url: "{% url 'ATI:add_case' %}",
+            url: "{% url 'ATI:add_plan' %}",
             data: postdata,
             datatype: 'json',
             success: function (data) {
@@ -95,17 +149,17 @@
     });
 
     function set_time() {
-        let timing = document.getElementById('timeing').value;
+        let timing = document.getElementById('timing').value;
         let label = document.getElementById('time_set_label');
         let label1 = document.getElementById('time_set_label1');
         let time_set = document.getElementById('time_set_content');
         let time_set1 = document.getElementById('time_set_content1');
-        if (timing === "1"){
+        if (timing === "2"){
             label.style.display = "block";
             label1.style.display = "none";
             time_set.style.display = "block";
             time_set1.style.display = "none";
-        } else if (timing === "2") {
+        } else if (timing === "3" || timing === "1") {
             let current_time = new Date();
             document.getElementById('time_set1').value = current_time.getHours() + ':' + current_time.getMinutes();
             label1.style.display = "block";
@@ -117,6 +171,25 @@
             label1.style.display = "none";
             time_set.style.display = "none";
             time_set1.style.display = "none";
+        }
+    }
+
+    function set_email() {
+        let sending = document.getElementById('sending').value;
+        let receiver_label = document.getElementById('receiver_label');
+        let receiver_content = document.getElementById('receiver_content');
+        let subject_div = document.getElementById('subject_div');
+        let receiver_email_label = document.getElementById('receiver_email_label');
+        if (sending === "0"){
+            receiver_label.style.display = "none";
+            receiver_content.style.display = "none";
+            subject_div.style.display = "none";
+            receiver_email_label.style.display = "none";
+        } else {
+            receiver_label.style.display = "block";
+            receiver_content.style.display = "block";
+            subject_div.style.display = "block";
+            receiver_email_label.style.display = "block";
         }
     }
 </script>

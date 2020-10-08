@@ -11,7 +11,7 @@
                 <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
             <li class="active">
-                <a class="">测试计划</a>
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
             </li>
         </ol>
 
@@ -25,33 +25,39 @@
         <div class="panel">
             <div class="panel-heading">
                 <a href="{% url 'ATI:add_plan' %}?projectId={{ project_id }}" class="btn btn-primary">新增测试计划</a>
-                <input type="text" id="content" style="width: 250px; height: 32px;margin-left: 950px;" placeholder="测试计划名称">
-                <a href="#" class="btn btn-primary" id="search">搜索</a>
+                {% if content == ""  %}
+                    <input type="text" id="content" style="width: 250px; height: 32px; margin-left: 950px;" placeholder="测试计划名称">
+                {% else %}
+                    <input type="text" id="content" style="width: 250px; height: 32px; margin-left: 950px;" value="{{ content }}">
+                {% endif %}
+                <a href="#" class="btn btn-primary" onclick="search_all();">搜索</a>
             </div>
             <div class="panel-body">
                 <table class="table table-bordered">
                     <thead>
                     <tr>
-                        <th width="20%">测试计划名称</th>
-                        <th width="15%">所属项目</th>
-                        <th width="20%">测试计划描述</th>
-                        <th width="13%">更新时间</th>
-                        <th width="20%">操作</th>
+                        <th width="17%">测试计划名称</th>
+                        <th width="13%">所属项目</th>
+                        <th width="22%">测试计划描述</th>
+                        <th width="10%">更新时间</th>
+                        <th width="38%">操作</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for case in case_list %}
+                    {% for plan in plan_list %}
                     <tr>
-                        <td>{{ case.name }}</td>
+                        <td>{{ plan.name }}</td>
                         <td>{{ project_name }}</td>
-                        <td>{{ case.description }}</td>
-                        <td>{{ case.update_time|date:'Y-m-d H:i:s' }}</td>
+                        <td>{{ plan.description }}</td>
+                        <td>{{ plan.update_time|date:'Y-m-d H:i:s' }}</td>
                         <td>
-                            <a href="{% url 'ATI:show_case_interface' %}?Id={{ case.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">查看场景</a>
-                            <a href="{% url 'ATI:edit_case' %}?Id={{ case.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">添加变量</a>
-                            <a href="{% url 'ATI:edit_case' %}?Id={{ case.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑计划</a>
-                            <a href="{% url 'ATI:edit_case' %}?Id={{ case.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">执行计划</a>
-                            <a href="#" onclick="openResult('{% url 'ATI:delete_case' %}?Id={{ case.id }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除计划</a>
+                            <a href="{% url 'ATI:show_plan_and_scene' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">查看场景</a>
+                            <a href="{% url 'ATI:variables' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">设置变量</a>
+                            <a href="{% url 'ATI:edit_plan' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑计划</a>
+                            <a href="#" onclick="copy_scene('{% url 'ATI:copy_plan' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 10px;">复制计划</a>
+                            <a href="#" onclick="run('{% url 'ATI:run' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 10px;">执行计划</a>
+                            <a href="#" onclick="show_link('{{ url }}{% url 'ATI:run' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 10px;">生成外链</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_plan' %}?name={{ plan.name }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除计划</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -64,45 +70,84 @@
 {% endblock %}
 
 {% block fenye %}
-    {% if case_list %}
-        <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+    <div class="fenye"><ul id="paging" class="pagination"></ul></div>
 
-        <script type="text/javascript">
-        $(function () {
-            PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:cases' %}?projectId=' + {{ project_id }} + '&pageNum=')
-        });
+    <script type="text/javascript">
+    $(function () {
+        PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:plans' %}?projectId=' + {{ project_id }} + '&pageNum=')
+    });
 
-        function openResult(del_url){
-            let r = confirm("亲，您确定删除接口吗？")
-            if (r === true) {
-                window.location.href=del_url;
-            } else {}
-        }
-
-        function set_is_run(caseId, isRun){
-            let post_data = {
-                caseId: caseId,
-                isRun: isRun,
-            }
+    function openResult(del_url){
+        let r = confirm("亲，您确定删除测试计划吗？")
+        if (r === true) {
             $.ajax({
-                type: 'post',
-                url: "{% url 'ATI:set_is_run' %}",
-                data: post_data,
+                type: 'get',
+                url: del_url,
                 datatype: 'json',
-                success: function(data){
-                    if(data['code'] === 0) {
+                success: function (data) {
+                    if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                    } else {
+                        window.location.href = "{% url 'ATI:plans' %}?projectId={{ project_id }}";
+                    } else if (data['code'] === 1)  {
                         $.Toast(data['msg'], 'error');
+                    } else {
+                        $.Toast(data['msg'], 'warning');
                     }
                 }
             })
-        }
+        } else {}
+    }
 
-        $("#search").click(function () {
-            let content = document.getElementById('content').value;
-            window.location.href='{% url 'ATI:cases' %}?projectId={{ project_id }}&Content=' + content;
-        });
-        </script>
-    {% endif %}
+    function copy_scene(url) {
+        $.ajax({
+            type: 'get',
+            url: url,
+            datatype: 'json',
+            success: function (data) {
+                if (data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                    window.location.href = "{% url 'ATI:plans' %}?projectId={{ project_id }}";
+                } else if (data['code'] === 1)  {
+                    $.Toast(data['msg'], 'error');
+                } else {
+                    $.Toast(data['msg'], 'warning');
+                }
+            }
+        })
+    }
+
+    $("#content").keypress(function (event) {
+        if (event.keyCode === 13){
+            search_all();
+        }
+    });
+
+    function search_all() {
+        let content = document.getElementById('content').value;
+        window.location.href='{% url 'ATI:plans' %}?projectId={{ project_id }}&Content=' + content;
+    }
+
+    function run(url) {
+        $.ajax({
+            type: 'get',
+            url: url,
+            datatype: 'json',
+            success: function (data) {
+                if (data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                } else if (data['code'] === 1)  {
+                    $.Toast(data['msg'], 'error');
+                } else {
+                    $.Toast(data['msg'], 'warning');
+                }
+            }
+        })
+    }
+
+    function show_link(url) {
+        alert(url);
+    }
+
+</script>
+
 {% endblock %}

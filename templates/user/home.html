@@ -43,28 +43,20 @@
     </nav>
 
     <div class="all_index">
-        <div class="my_detail">
-            <div class="ATI">
+        <ul class="my_detail">
+            <li class="ATI">
                 <a href="{% url 'ATI:home' %}">
-                    <p>接口自动化测试</p>
+                    <img src="/static/img/ATI.bmp" width="100px", height="100px"/>
+                    <h4>接口自动化测试</h4>
                 </a>
-            </div>
-            <div class="web">
+            </li>
+            <li class="web">
                 <a href="#">
-                    <p>Web自动化测试</p>
+                    <img src="/static/img/WEB.png" width="100px", height="100px"/>
+                    <h4>Web自动化测试</h4>
                 </a>
-            </div>
-            <div class="mock">
-                <a href="#">
-                    <p>Mock平台</p>
-                </a>
-            </div>
-            <div class="monitor">
-                <a href="#">
-                    <p>服务器监控</p>
-                </a>
-            </div>
-        </div>
+            </li>
+        </ul>
     </div>
 </div>
 {% endblock %}

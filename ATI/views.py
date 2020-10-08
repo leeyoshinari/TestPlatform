@@ -1,23 +1,78 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Author: leeyoshinari
+
 import math
 import time
+import json
 import logging
 import traceback
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.http import JsonResponse
-from django.views.decorators.clickjacking import xframe_options_sameorigin
-from user.models import Projects, UserProject
-from ATI.models import Variables, Interfaces, Cases, InterfaceCase, Plans, CasePlan
+from django.db.models.deletion import ProtectedError
+from user.models import Projects, UserProject, Results
+from ATI.models import Variables, Interfaces, Scenes, InterfaceScene, Plans, ScenePlan
+from ATI.scheduler import Schedule
 from common.timeFormat import time_strftime
 
 
 logger = logging.getLogger('django')
+schedule = Schedule()
+
+
+def run(request):
+	"""
+	执行测试计划
+	"""
+	try:
+		plan_id = request.GET.get('Id')
+		r = Plans.objects.get(id=plan_id)
+		plan = Results.objects.create(plan_id=plan_id, plan_name=r.name, project_id=r.project_id, status=1, type='ATI')
+		schedule.task = (plan.id, plan_id)
+		logger.info((plan.id, plan_id))
+		return JsonResponse({'code': 0, 'msg': '测试计划执行成功', 'data': None}, json_dumps_params={'ensure_ascii':False})
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '测试计划执行失败', 'data': None}, json_dumps_params={'ensure_ascii':False})
 
 
 def home(request):
-	user_name = request.user.username
-	return render(request, 'ATI/home.html', context={'username': user_name})
+	if request.method == 'GET':
+		page_num = request.GET.get('pageNum')
+		if page_num:
+			page_num = int(page_num)
+		else:
+			page_num = 1
+
+		user_name = request.user.username
+		start_index = (page_num - 1) * 15
+		end_index = page_num * 15
+
+		all_list = []
+		total_num = UserProject.objects.filter(type='ATI', user_name=user_name).count()
+		project_ids = UserProject.objects.filter(type='ATI', user_name=user_name).order_by('-create_time')[start_index:end_index].values('project_id')
+		for pro_id in project_ids:
+			pro_id = pro_id['project_id']
+			total_info = {'project_name': Projects.objects.get(id=pro_id).name,
+						  'plan_num': Plans.objects.filter(project_id=pro_id).count(),
+						  'scene_num': Scenes.objects.filter(project_id=pro_id).count(),
+						  'case_num': Interfaces.objects.filter(project_id=pro_id).count(),
+						  'times': 0, 'total_case': 0, 'total_success': 0, 'total_interval': 0}
+
+			results = Results.objects.filter(project_id=pro_id)
+			for res in results:
+				if res.status == 3:
+					total_info['total_case'] += res.total_num
+					total_info['total_success'] += res.success_num
+					total_info['total_interval'] += res.interval
+					total_info['times'] += 1
+
+			all_list.append(total_info)
+
+		return render(request, 'ATI/home.html', context={'username': user_name, 'all_list': all_list, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
 def project(request):
@@ -49,14 +104,14 @@ def add_project(request):
 		name = request.POST.get('name')
 		user_name = request.user.username
 		if name:
-			if Projects.objects.filter(name=name, type='ATI'):
+			if Projects.objects.filter(type='ATI', name=name):
 				logger.warning('项目已存在，请勿重复添加')
 				return JsonResponse({'code': 1, 'msg': '项目已存在，请勿重复添加！', 'data': None})
 			else:
 				desc = request.POST.get('description')
 				pro_id = str(int(time.time() * 10000))
 				Projects.objects.create(id=pro_id, name=name, description=desc, type='ATI', create_time=time_strftime(), update_time=time_strftime())
-				project_id = Projects.objects.get(name=name, type='ATI').id
+				project_id = Projects.objects.get(type='ATI', name=name).id
 				UserProject.objects.create(user_name=user_name, project_id=project_id, type='ATI', create_time=time_strftime())
 				logger.info(f'{user_name}---{name}项目创建成功')
 				return JsonResponse({'code': 0, 'msg': '项目创建成功', 'data': None})
@@ -74,7 +129,7 @@ def update_project(request):
 	if request.method == 'POST':
 		name = request.POST.get('name')
 		user_name = request.user.username
-		r = Projects.objects.get(name=name, type='ATI')
+		r = Projects.objects.get(type='ATI', name=name)
 		r.name = name
 		r.description = request.POST.get('description')
 		r.update_time = time_strftime()
@@ -84,11 +139,11 @@ def update_project(request):
 
 	if request.method == 'GET':
 		name = request.GET.get('name')
-		projects = Projects.objects.get(name=name, type='ATI')
+		projects = Projects.objects.get(type='ATI', name=name)
 		return render(request, 'ATI/project/update.html', context={'projects': projects})
 
 
-def del_project(request):
+def delete_project(request):
 	"""
 	删除项目
 	"""
@@ -96,13 +151,16 @@ def del_project(request):
 		user_name = request.user.username
 		try:
 			name = request.GET.get('name')
-			project_id = Projects.objects.get(name=name, type='ATI').id
-			UserProject.objects.filter(project_id=project_id, type='ATI').delete()
-			Projects.objects.get(name=name, type='ATI').delete()
+			Projects.objects.get(type='ATI', name=name).delete()
 			logger.info(f'{user_name}---{name}项目删除成功')
+			return JsonResponse({'code': 0, 'msg': '项目删除成功', 'data': None})
+		except ProtectedError as err:
+			logger.info(err)
+			return JsonResponse({'code': 2, 'msg': '变量删除失败，由于存在受保护的外键', 'data': None})
 		except Exception as err:
 			logger.error(err)
-		return HttpResponseRedirect('/ATI/project/')
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '项目删除失败', 'data': None})
 
 
 def manager_project(request):
@@ -111,8 +169,8 @@ def manager_project(request):
 	"""
 	if request.method == 'GET':
 		name = request.GET.get('name')
-		project_id = Projects.objects.get(name=name, type='ATI').id
-		user_list = UserProject.objects.filter(project_id=project_id, type='ATI').values_list('user_name')
+		project_id = Projects.objects.get(type='ATI', name=name).id
+		user_list = UserProject.objects.filter(project_id=project_id).values_list('user_name')
 		users = [r[0] for r in user_list]
 		return render(request, 'ATI/project/manager.html', context={'projects': name, 'user_list': ', '.join(users)})
 
@@ -121,11 +179,11 @@ def manager_project(request):
 		username = request.POST.get('username')
 		current_user = request.user.username
 		if User.objects.filter(username=username):
-			project_id = Projects.objects.get(name=name, type='ATI').id
+			project_id = Projects.objects.get(type='ATI', name=name).id
 			if project_id:
 				if request.POST.get('isadd') == '0':
 					try:
-						UserProject.objects.get(user_name=username, project_id=project_id, type='ATI').delete()
+						UserProject.objects.get(project_id=project_id, user_name=username).delete()
 						logger.info(f'{current_user}---{name}项目中的{username}用户删除成功')
 						return JsonResponse({'code': 0, 'msg': '删除成功', 'data': None})
 					except Exception as err:
@@ -133,7 +191,7 @@ def manager_project(request):
 						return JsonResponse({'code': 1, 'msg': '该用户已不在该项目中', 'data': None})
 
 				if request.POST.get('isadd') == '1':
-					if UserProject.objects.filter(user_name=username, project_id=project_id, type='ATI'):
+					if UserProject.objects.filter(project_id=project_id, user_name=username):
 						return JsonResponse({'code': 1, 'msg': '该用户已在项目中', 'data': None})
 					else:
 						UserProject.objects.create(user_name=username, project_id=project_id, type='ATI', create_time=time_strftime())
@@ -154,7 +212,7 @@ def interfaces(request):
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
 		page_num = request.GET.get('pageNum')
-		content = request.GET.get('Content')
+		content = request.GET.get('Content', default="")
 		if page_num:
 			page_num = int(page_num)
 		else:
@@ -173,7 +231,7 @@ def interfaces(request):
 			total_num = Interfaces.objects.filter(project_id=project_id).count()
 			interface_list = Interfaces.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
 
-		return render(request, 'ATI/interface/index.html', context={'username': user_name, 'interface_list': interface_list, 'project_name': project_name, 'project_id': project_id, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'ATI/interface/index.html', context={'username': user_name, 'interface_list': interface_list, 'project_name': project_name, 'project_id': project_id, 'content': content, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
 def add_interface(request):
@@ -265,19 +323,24 @@ def delete_interface(request):
 		try:
 			Interfaces.objects.get(project_id=project_id, interface_id=interface_id).delete()
 			logger.info(f'{user_name}---{interface_id}接口删除成功')
+			return JsonResponse({'code': 0, 'msg': '接口删除成功', 'data': None})
+		except ProtectedError as err:
+			logger.info(err)
+			return JsonResponse({'code': 2, 'msg': '接口删除失败，由于存在受保护的外键', 'data': None})
 		except Exception as err:
 			logger.error(err)
-		return HttpResponseRedirect(f'/ATI/interface?projectId={project_id}')
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '接口删除失败', 'data': None})
 
 
-def cases(request):
+def scenes(request):
 	"""
 	查询用例
 	"""
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
 		page_num = request.GET.get('pageNum')
-		content = request.GET.get('Content')
+		content = request.GET.get('Content', default="")
 		if page_num:
 			page_num = int(page_num)
 		else:
@@ -290,16 +353,16 @@ def cases(request):
 		project_name = Projects.objects.get(type='ATI', id=project_id).name
 
 		if content:
-			total_num = Cases.objects.filter(Q(project_id=project_id), Q(name__contains=content)).count()
-			case_list = Cases.objects.filter(Q(project_id=project_id), Q(name__contains=content)).order_by('-update_time')[start_index:end_index]
+			total_num = Scenes.objects.filter(Q(project_id=project_id), Q(name__contains=content)).count()
+			scene_list = Scenes.objects.filter(Q(project_id=project_id), Q(name__contains=content)).order_by('-update_time')[start_index:end_index]
 		else:
-			total_num = Cases.objects.filter(project_id=project_id).count()
-			case_list = Cases.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
+			total_num = Scenes.objects.filter(project_id=project_id).count()
+			scene_list = Scenes.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
 
-		return render(request, 'ATI/cases/index.html', context={'username': user_name, 'case_list': case_list, 'project_name': project_name, 'project_id': project_id, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'ATI/scenes/index.html', context={'username': user_name, 'scene_list': scene_list, 'project_name': project_name, 'project_id': project_id, 'content': content, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
-def add_case(request):
+def add_scene(request):
 	"""
 		添加用例
 	"""
@@ -308,13 +371,13 @@ def add_case(request):
 		project_id = request.POST.get('project_id')
 		user_name = request.user.username
 		if name:
-			if Cases.objects.filter(name=name, project_id=project_id):
+			if Scenes.objects.filter(name=name, project_id=project_id):
 				logger.warning('用例已存在，请勿重复添加')
 				return JsonResponse({'code': 1, 'msg': '用例已存在，请勿重复添加！', 'data': None})
 			else:
 				desc = request.POST.get('description')
 				cas_id = str(int(time.time() * 10000))
-				Cases.objects.create(id=cas_id, name=name, description=desc, project_id=project_id, created_by=user_name, updated_by=user_name, create_time=time_strftime(), update_time=time_strftime())
+				Scenes.objects.create(id=cas_id, name=name, description=desc, project_id=project_id, created_by=user_name, updated_by=user_name, create_time=time_strftime(), update_time=time_strftime())
 				logger.info(f'{user_name}---{name}用例创建成功')
 				return JsonResponse({'code': 0, 'msg': '用例创建成功', 'data': None})
 		else:
@@ -323,19 +386,19 @@ def add_case(request):
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
 		user_name = request.user.username
-		return render(request, 'ATI/cases/add.html', context={'username': user_name, 'project_id': project_id})
+		return render(request, 'ATI/scenes/add.html', context={'username': user_name, 'project_id': project_id})
 
 
-def edit_case(request):
+def edit_scene(request):
 	"""
 	编辑用例
 	"""
 	if request.method == 'POST':
-		case_id = request.POST.get('Id')
+		scene_id = request.POST.get('Id')
 		project_id = request.POST.get('project_id')
 		name = request.POST.get('name')
 		user_name = request.user.username
-		r = Cases.objects.get(id=case_id, project_id=project_id)
+		r = Scenes.objects.get(id=scene_id, project_id=project_id)
 		r.name = name
 		r.description = request.POST.get('description')
 		r.update_time = time_strftime()
@@ -349,11 +412,11 @@ def edit_case(request):
 		project_id = request.GET.get('projectId')
 		case_id = request.GET.get('Id')
 		project_name = Projects.objects.get(id=project_id, type='ATI').name
-		cases = Cases.objects.get(id=case_id, project_id=project_id)
-		return render(request, 'ATI/variable/edit.html', context={'username': user_name, 'cases': cases, 'project_name': project_name , 'project_id': project_id})
+		scenes = Scenes.objects.get(id=case_id, project_id=project_id)
+		return render(request, 'ATI/scenes/edit.html', context={'username': user_name, 'scenes': scenes, 'project_name': project_name , 'project_id': project_id})
 
 
-def delete_case(request):
+def delete_scene(request):
 	"""
 	删除用例
 	"""
@@ -362,18 +425,23 @@ def delete_case(request):
 		project_id = request.GET.get('projectId')
 		user_name = request.user.username
 		try:
-			Cases.objects.get(project_id=project_id, id=case_id).delete()
+			Scenes.objects.get(project_id=project_id, id=case_id).delete()
 			logger.info(f'{user_name}---{case_id}变量删除成功')
+			return JsonResponse({'code': 0, 'msg': '变量删除成功', 'data': None})
+		except ProtectedError as err:
+			logger.info(err)
+			return JsonResponse({'code': 2, 'msg': '变量删除失败，由于存在受保护的外键', 'data': None})
 		except Exception as err:
 			logger.error(err)
-		return HttpResponseRedirect(f'/ATI/case?projectId={project_id}')
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '变量删除失败', 'data': None})
 
 
-def show_case_interface(request):
+def show_scene_interface(request):
 	"""
 		查看用例中的接口
 	"""
-	case_id = request.GET.get('Id')
+	scene_id = request.GET.get('Id')
 	project_id = request.GET.get('projectId')
 	page_num = request.GET.get('pageNum')
 	if page_num:
@@ -384,20 +452,20 @@ def show_case_interface(request):
 	user_name = request.user.username
 	start_index = (page_num - 1) * 10
 	end_index = page_num * 10
-	total_num = InterfaceCase.objects.filter(case_id=case_id).count()
-	case_interfaces = InterfaceCase.objects.filter(case_id=case_id).order_by('display_sort')[start_index:end_index]
-	return render(request, 'ATI/cases/interfaces.html', context={'username': user_name, 'project_id': project_id, 'case_id': case_id, 'case_interfaces': case_interfaces, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+	total_num = InterfaceScene.objects.filter(scene_id=scene_id).count()
+	scene_interfaces = InterfaceScene.objects.filter(scene_id=scene_id).order_by('display_sort')[start_index:end_index]
+	return render(request, 'ATI/scenes/interfaces.html', context={'username': user_name, 'project_id': project_id, 'scene_id': scene_id, 'scene_interfaces': scene_interfaces, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
-def add_case_interface(request):
+def add_scene_interface(request):
 	"""
 	给用例增加接口，查看接口列表
 	"""
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
-		case_id = request.GET.get('caseId')
+		scene_id = request.GET.get('sceneId')
 		page_num = request.GET.get('pageNum')
-		content = request.GET.get('Content')
+		content = request.GET.get('Content', default="")
 		if page_num:
 			page_num = int(page_num)
 		else:
@@ -416,20 +484,20 @@ def add_case_interface(request):
 			total_num = Interfaces.objects.filter(project_id=project_id).count()
 			interface_list = Interfaces.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
 
-		return render(request, 'ATI/cases/add_interface.html', context={'username': user_name, 'interface_list': interface_list, 'project_name': project_name, 'project_id': project_id, 'case_id': case_id, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'ATI/scenes/add_interface.html', context={'username': user_name, 'interface_list': interface_list, 'project_name': project_name, 'project_id': project_id, 'scene_id': scene_id, 'content': content, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
-def add_interface_to_case(request):
+def add_interface_to_scene(request):
 	"""
 	给用例增加接口
 	"""
 	try:
 		user_name = request.user.username
-		case_id = request.POST.get('caseId')
+		scene_id = request.POST.get('sceneId')
 		interface_id = request.POST.get('interfaceId')
-		total_num = InterfaceCase.objects.filter(case_id=case_id).count()
-		InterfaceCase.objects.create(case_id=case_id, interface_id=interface_id, is_run=1, display_sort=total_num+1)
-		logger.info(f'{user_name}---将接口{interface_id}添加到用例{case_id}中')
+		total_num = InterfaceScene.objects.filter(scene_id=scene_id).aggregate(Max('display_sort'))['display_sort__max']
+		InterfaceScene.objects.create(scene_id=scene_id, interface_id=interface_id, is_run=1, display_sort=total_num+1)
+		logger.info(f'{user_name}---将接口{interface_id}添加到用例{scene_id}中')
 		return JsonResponse({'code': 0, 'msg': '接口添加成功', 'data': None})
 	except Exception as err:
 		logger.error(err)
@@ -439,20 +507,20 @@ def add_interface_to_case(request):
 
 def set_is_run(request):
 	"""
-	设置是否执行
+	设置测试场景中的接口是否执行
 	"""
 	try:
 		user_name = request.user.username
-		case_id = request.POST.get('caseId')
+		scene_id = request.POST.get('sceneId')
 		interface_id = request.POST.get('interfaceId')
 		is_run = request.POST.get('isRun')
-		if case_id:
-			r = Cases.objects.get(id=case_id)
+		if scene_id:
+			r = Scenes.objects.get(id=scene_id)
 			r.is_run = is_run
 			r.save()
-			logger.info(f'{user_name}----{case_id}是否执行设置为{is_run}')
+			logger.info(f'{user_name}----{scene_id}是否执行设置为{is_run}')
 		if interface_id:
-			r = InterfaceCase.objects.get(id=interface_id)
+			r = InterfaceScene.objects.get(id=interface_id)
 			r.is_run = is_run
 			r.save()
 			logger.info(f'{user_name}----{interface_id}是否执行设置为{is_run}')
@@ -470,34 +538,34 @@ def move_up_or_down(request):
 	"""
 	try:
 		user_name = request.user.username
-		case_id = request.POST.get('caseId')
+		scene_id = request.POST.get('sceneId')
 		interface_id = request.POST.get('interfaceId')
 		is_up = request.POST.get('is_up')
 		if is_up == '0':
-			current_sort = InterfaceCase.objects.get(case_id=case_id, interface_id=interface_id).display_sort
-			downer = InterfaceCase.objects.filter(case_id=case_id, display_sort__gt=current_sort).order_by('display_sort').first().id
-			r = InterfaceCase.objects.get(case_id=case_id, interface_id=interface_id)
+			current_sort = InterfaceScene.objects.get(scene_id=scene_id, interface_id=interface_id).display_sort
+			downer = InterfaceScene.objects.filter(scene_id=scene_id, display_sort__gt=current_sort).order_by('display_sort').first().id
+			r = InterfaceScene.objects.get(scene_id=scene_id, interface_id=interface_id)
 			r.display_sort = current_sort + 1
 			r.save()
 
-			r = InterfaceCase.objects.get(id=downer)
+			r = InterfaceScene.objects.get(id=downer)
 			r.display_sort = current_sort
 			r.save()
 
-			logger.info(f'{user_name}---用例{case_id}向下移动成功')
+			logger.info(f'{user_name}---用例{scene_id}向下移动成功')
 
 		else:
-			current_sort = InterfaceCase.objects.get(case_id=case_id, interface_id=interface_id).display_sort
-			upper = InterfaceCase.objects.filter(case_id=case_id, display_sort__lt=current_sort).order_by('display_sort').last().id
-			r = InterfaceCase.objects.get(case_id=case_id, interface_id=interface_id)
+			current_sort = InterfaceScene.objects.get(scene_id=scene_id, interface_id=interface_id).display_sort
+			upper = InterfaceScene.objects.filter(scene_id=scene_id, display_sort__lt=current_sort).order_by('display_sort').last().id
+			r = InterfaceScene.objects.get(scene_id=scene_id, interface_id=interface_id)
 			r.display_sort = current_sort - 1
 			r.save()
 
-			r = InterfaceCase.objects.get(id=upper)
+			r = InterfaceScene.objects.get(id=upper)
 			r.display_sort = current_sort
 			r.save()
 
-			logger.info(f'{user_name}---用例{case_id}向上移动成功')
+			logger.info(f'{user_name}---用例{scene_id}向上移动成功')
 
 		return JsonResponse({'code': 0, 'msg': '移动成功', 'data': None})
 
@@ -511,60 +579,60 @@ def move_up_or_down(request):
 		return JsonResponse({'code': 1, 'msg': '移动失败', 'data': None})
 
 
-def edit_interface_from_case(request):
+def edit_interface_from_scene(request):
 	"""
 	编辑接口
 	"""
-	if request.method == 'POST':
-		interface_id = request.POST.get('interface_id')
-		project_id = request.POST.get('project_id')
-		user_name = request.user.username
-		r = Interfaces.objects.get(id=interface_id, project_id=project_id)
-		r.name = request.POST.get('name')
-		r.interface = request.POST.get('interface')
-		r.protocol = request.POST.get('protocol')
-		r.method = request.POST.get('method')
-		r.parameter = request.POST.get('parameter')
-		r.timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
-		r.header = request.POST.get('header')
-		r.pre_process = request.POST.get('pre_process')
-		r.post_process = request.POST.get('post_process')
-		r.except_result = request.POST.get('except_result')
-		r.assert_method = request.POST.get('assert_method')
-		r.assert_result = request.POST.get('assert_result')
-		r.description = request.POST.get('description')
-		r.updated_by = user_name
-		r.update_time = time_strftime()
-		r.save()
-		logger.info(f'{user_name}---{interface_id}接口修改成功')
-		return JsonResponse({'code': 0, 'msg': '接口修改成功', 'data': None})
+	pass
+	# if request.method == 'POST':
+	# 	interface_id = request.POST.get('interface_id')
+	# 	project_id = request.POST.get('project_id')
+	# 	user_name = request.user.username
+	# 	r = Interfaces.objects.get(id=interface_id, project_id=project_id)
+	# 	r.name = request.POST.get('name')
+	# 	r.interface = request.POST.get('interface')
+	# 	r.protocol = request.POST.get('protocol')
+	# 	r.method = request.POST.get('method')
+	# 	r.parameter = request.POST.get('parameter')
+	# 	r.timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
+	# 	r.header = request.POST.get('header')
+	# 	r.pre_process = request.POST.get('pre_process')
+	# 	r.post_process = request.POST.get('post_process')
+	# 	r.except_result = request.POST.get('except_result')
+	# 	r.assert_method = request.POST.get('assert_method')
+	# 	r.assert_result = request.POST.get('assert_result')
+	# 	r.description = request.POST.get('description')
+	# 	r.updated_by = user_name
+	# 	r.update_time = time_strftime()
+	# 	r.save()
+	# 	logger.info(f'{user_name}---{interface_id}接口修改成功')
+	# 	return JsonResponse({'code': 0, 'msg': '接口修改成功', 'data': None})
+	#
+	# if request.method == 'GET':
+	# 	interface_id = request.GET.get('Id')
+	# 	project_id = request.GET.get('projectId')
+	# 	case_id = request.GET.get('caseId')
+	# 	user_name = request.user.username
+	# 	interface = Interfaces.objects.get(id=interface_id, project_id=project_id)
+	# 	return render(request, 'ATI/cases/edit_interface.html', context={'interface': interface, 'username': user_name, 'project_id': project_id, 'case_id': case_id})
 
-	if request.method == 'GET':
-		interface_id = request.GET.get('Id')
-		project_id = request.GET.get('projectId')
-		case_id = request.GET.get('caseId')
-		user_name = request.user.username
-		interface = Interfaces.objects.get(id=interface_id, project_id=project_id)
-		return render(request, 'ATI/cases/edit_interface.html', context={'interface': interface, 'username': user_name, 'project_id': project_id, 'case_id': case_id})
 
-
-def delete_interface_from_case(request):
+def delete_interface_from_scene(request):
 	"""
 	从用例中删除接口
 	"""
 	user_name = request.user.username
 	ID = request.GET.get('Id')
-	case_id = request.GET.get('caseId')
+	scene_id = request.GET.get('sceneId')
 	interface_id = request.GET.get('interfaceId')
-	project_id = request.GET.get('projectId')
 	try:
-		InterfaceCase.objects.get(id=ID, interface_id=interface_id).delete()
-		logger.info(f'{user_name}---接口{case_id}从用例{interface_id}中删除')
-		# return JsonResponse({'code': 0, 'msg': '删除成功', 'data': None})
+		InterfaceScene.objects.get(id=ID, interface_id=interface_id).delete()
+		logger.info(f'{user_name}---接口{scene_id}从用例{interface_id}中删除')
+		return JsonResponse({'code': 0, 'msg': '删除成功', 'data': None})
 	except Exception as err:
 		logger.error(err)
-		# return JsonResponse({'code': 1, 'msg': '删除失败', 'data': None})
-	return HttpResponseRedirect(f'/ATI/case/interface?Id={case_id}&projectId={project_id}')
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '删除失败', 'data': None})
 
 
 def variables(request):
@@ -574,6 +642,7 @@ def variables(request):
 		:return:
 	"""
 	if request.method == 'GET':
+		plan_id = request.GET.get('Id')
 		project_id = request.GET.get('projectId')
 		page_num = request.GET.get('pageNum')
 		if page_num:
@@ -585,21 +654,10 @@ def variables(request):
 		start_index = (page_num - 1) * 10
 		end_index = page_num * 10
 
-		project_ids = UserProject.objects.filter(type='ATI', user_name=user_name).values('project_id')
-		projects = Projects.objects.filter(type='ATI', id__in=project_ids).values_list('id', 'name')
-		p_dict = {}
-		for pro in projects:
-			p_dict.update({str(pro[0]): pro[1]})
+		total_num = Variables.objects.filter(plan_id=plan_id).count()
+		global_list = Variables.objects.filter(plan_id=plan_id).order_by('-update_time')[start_index:end_index]
 
-		if project_id:
-			total_num = Variables.objects.filter(project_id=project_id).count()
-			global_list = Variables.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
-		else:
-			project_id = ''
-			total_num = Variables.objects.filter(project_id__in=project_ids).count()
-			global_list = Variables.objects.filter(project_id__in=project_ids).order_by('-update_time')[start_index:end_index]
-
-		return render(request, 'ATI/variable/index.html', context={'username': user_name, 'global_list': global_list, 'projects': p_dict, 'project_list': projects, 'project_id': project_id, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'ATI/variable/index.html', context={'username': user_name, 'global_list': global_list, 'plan_id': plan_id, 'project_id': project_id, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
 def add_variable(request):
@@ -608,16 +666,16 @@ def add_variable(request):
 		"""
 	if request.method == 'POST':
 		name = request.POST.get('name')
-		project_id = request.POST.get('project_id')
+		plan_id = request.POST.get('plan_id')
 		user_name = request.user.username
 		if name:
-			if Variables.objects.filter(name=name, project_id=project_id):
+			if Variables.objects.filter(name=name, plan_id=plan_id):
 				logger.warning('变量已存在，请勿重复添加')
 				return JsonResponse({'code': 1, 'msg': '变量已存在，请勿重复添加！', 'data': None})
 			else:
 				value_v = request.POST.get('value')
 				desc = request.POST.get('description')
-				Variables.objects.create(name=name, description=desc, value=value_v, project_id=project_id, create_time=time_strftime(),
+				Variables.objects.create(name=name, description=desc, value=value_v, plan_id=plan_id, create_time=time_strftime(),
 										created_by=user_name, updated_by=user_name, update_time=time_strftime())
 				logger.info(f'{user_name}---{name}变量创建成功')
 				return JsonResponse({'code': 0, 'msg': '变量创建成功', 'data': None})
@@ -626,9 +684,9 @@ def add_variable(request):
 			return JsonResponse({'code': 1, 'msg': '变量名称不能为空', 'data': None})
 	if request.method == 'GET':
 		user_name = request.user.username
-		project_ids = UserProject.objects.filter(type='ATI', user_name=user_name).values('project_id')
-		projects = Projects.objects.filter(type='ATI', id__in=project_ids).values_list('id', 'name')
-		return render(request, 'ATI/variable/add.html', context={'project_list': projects})
+		plan_id = request.GET.get('Id')
+		project_id = request.GET.get('projectId')
+		return render(request, 'ATI/variable/add.html', context={'username': user_name, 'plan_id': plan_id, 'project_id': project_id})
 
 
 def edit_variable(request):
@@ -637,9 +695,9 @@ def edit_variable(request):
 	"""
 	if request.method == 'POST':
 		name = request.POST.get('name')
-		project_id = request.POST.get('project_id')
+		plan_id = request.POST.get('plan_id')
 		user_name = request.user.username
-		r = Variables.objects.get(name=name, project_id=project_id)
+		r = Variables.objects.get(name=name, plan_id=plan_id)
 		r.value = request.POST.get('value')
 		r.description = request.POST.get('description')
 		r.update_time = time_strftime()
@@ -650,10 +708,10 @@ def edit_variable(request):
 
 	if request.method == 'GET':
 		name = request.GET.get('name')
+		plan_id = request.GET.get('planId')
 		project_id = request.GET.get('projectId')
-		project_name = Projects.objects.get(id=project_id, type='ATI').name
-		variables = Variables.objects.get(name=name, project_id=project_id)
-		return render(request, 'ATI/variable/edit.html', context={'variables': variables, 'project_name': project_name})
+		variables = Variables.objects.get(name=name, plan_id=plan_id)
+		return render(request, 'ATI/variable/edit.html', context={'variables': variables, 'plan_id': plan_id, 'project_id': project_id})
 
 
 def delete_variable(request):
@@ -662,14 +720,16 @@ def delete_variable(request):
 	"""
 	if request.method == "GET":
 		name = request.GET.get('name')
-		project_id = request.GET.get('projectId')
+		plan_id = request.GET.get('planId')
 		user_name = request.user.username
 		try:
-			Variables.objects.get(project_id=project_id, name=name).delete()
+			Variables.objects.get(plan_id=plan_id, name=name).delete()
 			logger.info(f'{user_name}---{name}变量删除成功')
+			return JsonResponse({'code': 0, 'msg': '变量删除成功', 'data': None})
 		except Exception as err:
 			logger.error(err)
-		return HttpResponseRedirect(f'/ATI/variable?projectId={project_id}')
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '变量删除失败', 'data': None})
 
 
 def plans(request):
@@ -679,13 +739,14 @@ def plans(request):
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
 		page_num = request.GET.get('pageNum')
-		content = request.GET.get('Content')
+		content = request.GET.get('Content', default="")
 		if page_num:
 			page_num = int(page_num)
 		else:
 			page_num = 1
 
 		user_name = request.user.username
+		url = request.META.get('HTTP_HOST')
 		start_index = (page_num - 1) * 10
 		end_index = page_num * 10
 
@@ -698,7 +759,7 @@ def plans(request):
 			total_num = Plans.objects.filter(project_id=project_id).count()
 			plan_list = Plans.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
 
-		return render(request, 'ATI/plan/index.html', context={'username': user_name, 'plan_list': plan_list, 'project_name': project_name, 'project_id': project_id, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'ATI/plan/index.html', context={'username': user_name, 'plan_list': plan_list, 'project_name': project_name, 'project_id': project_id, 'content': content, 'url':url, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
 
 
 def add_plan(request):
@@ -710,19 +771,360 @@ def add_plan(request):
 		project_id = request.POST.get('project_id')
 		user_name = request.user.username
 		if name:
-			if Cases.objects.filter(name=name, project_id=project_id):
-				logger.warning('用例已存在，请勿重复添加')
-				return JsonResponse({'code': 1, 'msg': '用例已存在，请勿重复添加！', 'data': None})
+			if Plans.objects.filter(name=name, project_id=project_id):
+				logger.warning('测试计划已存在，请勿重复添加')
+				return JsonResponse({'code': 1, 'msg': '测试计划已存在，请勿重复添加！', 'data': None})
 			else:
 				desc = request.POST.get('description')
-				cas_id = str(int(time.time() * 10000))
-				Cases.objects.create(id=cas_id, name=name, description=desc, project_id=project_id, created_by=user_name, updated_by=user_name, create_time=time_strftime(), update_time=time_strftime())
-				logger.info(f'{user_name}---{name}用例创建成功')
-				return JsonResponse({'code': 0, 'msg': '用例创建成功', 'data': None})
+				timing = request.POST.get('timing')
+				interval = request.POST.get('interval')
+				time_setting = request.POST.get('time_setting')
+				sending = request.POST.get('sending')
+				receiver_name = request.POST.get('receiver_name')
+				subject = request.POST.get('subject')
+				receiver_email = request.POST.get('receiver_email')
+
+				if sending == "0":
+					email = ""
+				else:
+					email = json.dumps({
+						'subject': subject,
+						'receiver_name': receiver_name,
+						'receiver_email': receiver_email
+					}, ensure_ascii=False)
+
+				if timing == "0":
+					time_set = ""
+				elif timing == "2":
+					time_set = interval
+				else:
+					time_set = time_setting
+				plan_id = str(int(time.time() * 10000))
+				Plans.objects.create(id=plan_id, name=name, description=desc, project_id=project_id,
+									 timing=timing, time_set=time_set, is_email=sending, email=email,
+									 created_by=user_name, updated_by=user_name,
+									 create_time=time_strftime(), update_time=time_strftime())
+				logger.info(f'{user_name}---{name}测试计划创建成功')
+				return JsonResponse({'code': 0, 'msg': '测试计划创建成功', 'data': None})
 		else:
-			logger.error('用例名称不能为空')
-			return JsonResponse({'code': 1, 'msg': '用例名称不能为空', 'data': None})
+			logger.error('测试计划名称不能为空')
+			return JsonResponse({'code': 1, 'msg': '测试计划名称不能为空', 'data': None})
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
 		user_name = request.user.username
 		return render(request, 'ATI/plan/add.html', context={'username': user_name, 'project_id': project_id})
+
+
+def edit_plan(request):
+	"""
+	编辑测试计划
+	"""
+	if request.method == 'POST':
+		plan_id = request.POST.get('Id')
+		name = request.POST.get('name')
+		project_id = request.POST.get('project_id')
+		user_name = request.user.username
+		timing = request.POST.get('timing')
+		sending = request.POST.get('sending')
+
+		interval = request.POST.get('interval')
+		time_setting = request.POST.get('time_setting')
+		receiver_name = request.POST.get('receiver_name')
+		subject = request.POST.get('subject')
+		receiver_email = request.POST.get('receiver_email')
+
+		if sending == "0":
+			email = ""
+		else:
+			email = json.dumps({
+				'subject': subject,
+				'receiver_name': receiver_name,
+				'receiver_email': receiver_email
+			}, ensure_ascii=False)
+
+		if timing == "0":
+			time_set = ""
+		elif timing == "2":
+			time_set = interval
+		else:
+			time_set = time_setting
+		r = Plans.objects.get(id=plan_id, project_id=project_id)
+		r.description = request.POST.get('description')
+		r.name = name
+		r.timing = timing
+		r.time_set = time_set
+		r.is_email = sending
+		r.email = email
+		r.update_by = user_name
+		r.update_time = time_strftime()
+		r.save()
+
+		logger.info(f'{user_name}---{name}测试计划编辑成功')
+		return JsonResponse({'code': 0, 'msg': '测试计划编辑成功', 'data': None})
+
+	if request.method == 'GET':
+		user_name = request.user.username
+		plan_id = request.GET.get('Id')
+		project_id = request.GET.get('projectId')
+		plan = Plans.objects.get(id=plan_id, project_id=project_id)
+		if plan.email:
+			email = json.loads(plan.email)
+			receiver_name = email.get('receiver_name')
+			subject = email.get('subject')
+			receiver_email = email.get('receiver_email')
+		else:
+			receiver_name = None
+			subject = None
+			receiver_email = None
+		return render(request, 'ATI/plan/edit.html', context={'username': user_name, 'project_id': project_id, 'plan': plan, 'subject': subject, 'receiver_name': receiver_name, 'receiver_email': receiver_email})
+
+
+def copy_plan(request):
+	"""
+	复制测试计划
+	"""
+	try:
+		user_name = request.user.username
+		plan_id = request.GET.get('Id')
+		plan = Plans.objects.get(id=plan_id)
+		plan_id_id = str(int(time.time() * 10000))
+		plan_name = plan.name + '_copy'
+		Plans.objects.create(id=plan_id_id, name=plan_name, description=plan.description, project_id=plan.project_id,
+							 timing=plan.timing, time_set=plan.time_set, is_email=plan.is_email, email=plan.email,
+							 created_by=user_name, updated_by=user_name,
+							 create_time=time_strftime(), update_time=time_strftime())
+		logger.info(f'{user_name}---{plan_name}测试计划创建成功')
+
+		scenes = ScenePlan.objects.filter(plan_id=plan_id)
+		for scene in scenes:
+			ScenePlan.objects.create(is_run=scene.is_run, display_sort=scene.display_sort, scene_id=scene.scene_id, plan_id=plan_id_id)
+		logger.info(f'{user_name}---{plan_name}测试计划中的测试场景创建成功')
+		return JsonResponse({'code': 0, 'msg': '测试计划复制成功', 'data': None})
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '测试计划复制失败', 'data': None})
+
+
+
+def delete_plan(request):
+	"""
+		删除计划
+	"""
+	if request.method == "GET":
+		name = request.GET.get('name')
+		project_id = request.GET.get('projectId')
+		user_name = request.user.username
+		try:
+			Plans.objects.get(project_id=project_id, name=name).delete()
+			logger.info(f'{user_name}---{name}测试计划删除成功')
+			return JsonResponse({'code': 0, 'msg': '测试计划删除成功', 'data': None})
+		except ProtectedError as err:
+			logger.info(err)
+			return JsonResponse({'code': 2, 'msg': '测试计划删除失败，由于存在受保护的外键', 'data': None})
+		except Exception as err:
+			logger.error(err)
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '测试计划删除失败', 'data': None})
+
+
+def show_plan_and_scene(request):
+	"""
+	查看测试计划中的测试场景
+	"""
+	if request.method == 'GET':
+		user_name = request.user.username
+		plan_id = request.GET.get('Id')
+		project_id = request.GET.get('projectId')
+		page_num = request.GET.get('pageNum')
+		if page_num:
+			page_num = int(page_num)
+		else:
+			page_num = 1
+
+		start_index = (page_num - 1) * 10
+		end_index = page_num * 10
+		total_num = ScenePlan.objects.filter(plan_id=plan_id).count()
+		plan_scenes = ScenePlan.objects.filter(plan_id=plan_id).order_by('display_sort')[start_index:end_index]
+		return render(request, 'ATI/plan/scenes.html', context={'username': user_name, 'project_id': project_id, 'plan_id': plan_id, 'plan_scenes': plan_scenes, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+
+
+def add_plan_and_scene(request):
+	"""
+	给测试计划添加测试用例，显示测试用例列表
+	"""
+	if request.method == 'GET':
+		project_id = request.GET.get('projectId')
+		plan_id = request.GET.get('planId')
+		page_num = request.GET.get('pageNum')
+		content = request.GET.get('Content', default="")
+		if page_num:
+			page_num = int(page_num)
+		else:
+			page_num = 1
+
+		user_name = request.user.username
+		start_index = (page_num - 1) * 10
+		end_index = page_num * 10
+
+		project_name = Projects.objects.get(type='ATI', id=project_id).name
+
+		if content:
+			total_num = Scenes.objects.filter(Q(project_id=project_id), Q(name__contains=content)).count()
+			scene_list = Scenes.objects.filter(Q(project_id=project_id), Q(name__contains=content)).order_by('-update_time')[start_index:end_index]
+		else:
+			total_num = Scenes.objects.filter(project_id=project_id).count()
+			scene_list = Scenes.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
+
+		return render(request, 'ATI/plan/add_scene.html', context={'username': user_name, 'scene_list': scene_list, 'project_name': project_name, 'plan_id': plan_id,
+							   'project_id': project_id, 'content': content, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+
+
+def add_scene_to_plan(request):
+	"""
+	把测试场景添加到测试计划中
+	"""
+	try:
+		user_name = request.user.username
+		scene_id = request.POST.get('sceneId')
+		plan_id = request.POST.get('planId')
+		total_num = ScenePlan.objects.filter(plan_id=plan_id).count()
+		ScenePlan.objects.create(plan_id=plan_id, scene_id=scene_id, is_run=1, display_sort=total_num+1)
+		logger.info(f'{user_name}---将测试场景{scene_id}添加到测试计划{plan_id}中')
+		return JsonResponse({'code': 0, 'msg': '测试场景添加成功', 'data': None})
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '测试场景添加异常', 'data': None})
+
+
+def edit_scene_from_plan(request):
+	"""
+	在测试计划中编辑测试场景
+	"""
+	scene_id = request.GET.get('Id')
+	project_id = request.GET.get('projectId')
+	page_num = request.GET.get('pageNum')
+	if page_num:
+		page_num = int(page_num)
+	else:
+		page_num = 1
+
+	user_name = request.user.username
+	start_index = (page_num - 1) * 10
+	end_index = page_num * 10
+	total_num = InterfaceScene.objects.filter(case_id=scene_id).count()
+	scene_interfaces = InterfaceScene.objects.filter(case_id=scene_id).order_by('display_sort')[start_index:end_index]
+	return render(request, 'ATI/plan/interfaces.html', context={'username': user_name, 'project_id': project_id, 'scene_id': scene_id, 'scene_interfaces': scene_interfaces, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+
+
+def delete_scene_from_plan(request):
+	"""
+	从测试计划中删除测试场景
+	"""
+	user_name = request.user.username
+	ID = request.GET.get('Id')
+	try:
+		ScenePlan.objects.get(id=ID).delete()
+		logger.info(f'{user_name}---测试场景{ID}从测试计划中删除')
+		return JsonResponse({'code': 0, 'msg': '删除成功', 'data': None})
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '删除失败', 'data': None})
+
+
+def set_is_run_scene(request):
+	"""
+	设置测试计划中的测试场景是否执行
+	"""
+	try:
+		user_name = request.user.username
+		scene_id = request.POST.get('sceneId')
+		is_run = request.POST.get('isRun')
+		r = ScenePlan.objects.get(id=scene_id)
+		r.is_run = is_run
+		r.save()
+		logger.info(f'{user_name}----{scene_id}是否执行设置为{is_run}')
+		return JsonResponse({'code': 0, 'msg': '设置成功', 'data': None})
+
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '未设置成功', 'data': None})
+
+
+def move_up_or_down_scene(request):
+	"""
+	向上或向下移动
+	"""
+	try:
+		user_name = request.user.username
+		scene_id = request.POST.get('sceneId')
+		plan_id = request.POST.get('planId')
+		is_up = request.POST.get('is_up')
+		if is_up == '0':
+			current_sort = ScenePlan.objects.get(scene_id=scene_id, plan_id=plan_id).display_sort
+			downer = ScenePlan.objects.filter(plan_id=plan_id, display_sort__gt=current_sort).order_by('display_sort').first().id
+			r = ScenePlan.objects.get(scene_id=scene_id, plan_id=plan_id)
+			r.display_sort = current_sort + 1
+			r.save()
+
+			r = ScenePlan.objects.get(id=downer)
+			r.display_sort = current_sort
+			r.save()
+
+			logger.info(f'{user_name}---测试场景{scene_id}向下移动成功')
+
+		else:
+			current_sort = ScenePlan.objects.get(scene_id=scene_id, plan_id=plan_id).display_sort
+			upper = ScenePlan.objects.filter(plan_id=plan_id, display_sort__lt=current_sort).order_by('display_sort').last().id
+			r = ScenePlan.objects.get(scene_id=scene_id, plan_id=plan_id)
+			r.display_sort = current_sort - 1
+			r.save()
+
+			r = ScenePlan.objects.get(id=upper)
+			r.display_sort = current_sort
+			r.save()
+
+			logger.info(f'{user_name}---测试场景{scene_id}向上移动成功')
+
+		return JsonResponse({'code': 0, 'msg': '移动成功', 'data': None})
+
+	except AttributeError as err:
+		logger.error(err)
+		return JsonResponse({'code': 0, 'msg': '移动成功', 'data': None})
+
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		return JsonResponse({'code': 1, 'msg': '移动失败', 'data': None})
+
+
+def show_result(request):
+	"""
+	展示测试结果
+	"""
+	if request.method == 'GET':
+		page_num = request.GET.get('pageNum')
+		content = request.GET.get('Content', default="")
+		if page_num:
+			page_num = int(page_num)
+		else:
+			page_num = 1
+
+		user_name = request.user.username
+		start_index = (page_num - 1) * 10
+		end_index = page_num * 10
+
+		status = ['未执行', '排队中', '执行中', '执行完成', '已取消', '执行失败']
+
+		if content:
+			total_num = Results.objects.filter(Q(type='ATI'), Q(plan_name__contains=content)).count()
+			plan_list = Results.objects.filter(Q(type='ATI'), Q(plan_name__contains=content)).order_by('-start_time')[start_index:end_index]
+		else:
+			total_num = Results.objects.filter(type='ATI').count()
+			plan_list = Results.objects.filter(type='ATI').order_by('-start_time')[start_index:end_index]
+
+		return render(request, 'result/result.html', context={'username': user_name, 'plan_list': plan_list, 'content': content, 'status': status, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+

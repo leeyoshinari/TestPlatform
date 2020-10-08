@@ -13,9 +13,6 @@
             <li class="active">
                 <a class="" href="{% url 'ATI:interface' %}?projectId={{ project_id }}">接口管理</a>
             </li>
-            <li class="active">
-                <a class="">添加接口</a>
-            </li>
         </ol>
     </div>
 </div>
@@ -26,7 +23,7 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <h3 class="panel-title">添加接口</h3>
+                <h3 class="panel-title">新增接口</h3>
             </div>
             <div class="panel-body">
                 <div class="form-horizontal">
@@ -49,14 +46,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">接口协议</label>
-                        <div class="col-sm-6" style="width: 150px;">
+                        <label class="col-sm-2 control-label" style="display:none;">接口协议</label>
+                        <div class="col-sm-6" style="width: 150px; display: none">
                             <select id="protocol" class="form-control" style="width: 120px;">
                                 <option value="http" selected="selected">http</option>
                                 <option value="https">https</option>
                             </select>
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">请求方法</label>
+                        <!--<label class="col-sm-2 control-label" style="width: 9%">请求方法</label>-->
+                        <label class="col-sm-2 control-label">请求方法</label>
                         <div class="col-sm-6" style="width: 150px;">
                             <select id="method" class="form-control" style="width: 120px;">
                                 <option value="get" selected="selected">get</option>

@@ -1,0 +1,143 @@
+{% extends 'base_ati.html' %}
+
+{% block crumbs %}
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{% url 'ATI:home' %}">主页</a>
+            </li>
+            <li class="active">
+                <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
+            </li>
+            <li class="active">
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
+            </li>
+            <li class="active">
+                <a class="">查看场景</a>
+            </li>
+        </ol>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel">
+            <div class="panel-heading">
+                <a href="{% url 'ATI:add_plan_and_scene' %}?projectId={{ project_id }}&planId={{ plan_id }}" class="btn btn-primary">添加场景</a>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th width="20%">测试场景名称</th>
+                        <th width="15%">所属测试计划</th>
+                        <th width="20%">是否执行</th>
+                        <th width="20%">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for scene in plan_scenes %}
+                    <tr>
+                        <td>{{ scene.scene.name }}</td>
+                        <td>{{ scene.plan.name }}</td>
+                        <td>
+                             {% if scene.is_run > 0 %}
+                                <input name="{{ scene.id }}" type="radio" value="1" checked onclick="set_is_run('{{ scene.id }}', 1)">执行
+                                <input name="{{ scene.id }}" type="radio" value="0" onclick="set_is_run('{{ scene.id }}', 0)">不执行
+                            {% else %}
+                                <input name="{{ scene.id }}" type="radio" value="1" onclick="set_is_run('{{ scene.id }}', 1)">执行
+                                <input name="{{ scene.id }}" type="radio" value="0" checked onclick="set_is_run('{{ scene.id }}', 0)">不执行
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="#" onclick="move_up_down('{{ scene.scene_id }}', '{{ scene.plan_id }}', 1)" class="layui-btn layui-btn-xs" style="margin-right: 10px;">上移</a>
+                            <a href="#" onclick="move_up_down('{{ scene.scene_id }}', '{{ scene.plan_id }}', 0)" class="layui-btn layui-btn-xs" style="margin-right: 10px;">下移</a>
+                            <a href="{% url 'ATI:show_scene_interface' %}?projectId={{ project_id }}&Id={{ scene.scene_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑</a>
+                            <a href="#" onclick="openResult('{% url 'ATI:delete_scene_from_plan' %}?Id={{ scene.id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block fenye %}
+    <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+
+    <script type="text/javascript">
+    $(function () {
+        PagingManage($("#paging"), {{ total_num }}, {{ page_num }}, '{% url 'ATI:show_plan_and_scene' %}?projectId={{ project_id }}&Id={{ plan_id }}&pageNum=')
+    });
+
+    function openResult(del_url){
+        let r = confirm("亲，您确定从测试计划中删除测试场景吗？")
+        if (r === true) {
+            $.ajax({
+                type: 'get',
+                url: del_url,
+                datatype: 'json',
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        $.Toast(data['msg'], 'success');
+                        window.location.href = "{% url 'ATI:show_plan_and_scene' %}?projectId={{ project_id }}&Id={{ plan_id }}";
+                    } else if (data['code'] === 1)  {
+                        $.Toast(data['msg'], 'error');
+                    } else {
+                        $.Toast(data['msg'], 'warning');
+                    }
+                }
+            })
+        } else {}
+    }
+
+    function set_is_run(sceneId, isRun){
+        let post_data = {
+            sceneId: sceneId,
+            isRun: isRun,
+        }
+        $.ajax({
+            type: 'post',
+            url: "{% url 'ATI:set_is_run_scene' %}",
+            data: post_data,
+            datatype: 'json',
+            success: function(data){
+                if(data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                } else {
+                    $.Toast(data['msg'], 'error');
+                }
+            }
+        })
+    }
+
+    function move_up_down(sceneId, planId, is_up) {
+        let post_data = {
+            sceneId: sceneId,
+            planId: planId,
+            is_up: is_up,
+        }
+        $.ajax({
+            type: 'post',
+            url: "{% url 'ATI:move_up_or_down_scene' %}",
+            data: post_data,
+            datatype: 'json',
+            success: function(data){
+                if(data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                    window.location.href="{% url 'ATI:show_plan_and_scene' %}?Id=" + planId + "&projectId={{ project_id }}"
+                } else {
+                    $.Toast(data['msg'], 'error');
+                }
+            }
+        })
+    }
+    </script>
+{% endblock %}

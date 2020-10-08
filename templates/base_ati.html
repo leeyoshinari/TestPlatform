@@ -47,10 +47,9 @@
         <div class="sidebar-scroll">
             <nav>
                 <ul class="nav">
-                    <li><a href="{% url 'ATI:home' %}" class=""> <span>主页</span></a></li>
+                    <li style="margin-top: 20px;"><a href="{% url 'ATI:home' %}" class=""> <span>主页</span></a></li>
                     <li><a href="{% url 'ATI:project' %}" class="">项目管理</a></li>
-                    <li><a href="{% url 'ATI:variables' %}" class="">全局变量</a></li>
-                    <li><a href="/base/plan/" class="">测试结果</a></li>
+                    <li><a href="{% url 'ATI:show_result' %}" class="">测试结果</a></li>
                     <!-- <li>
                         <a href="#system" data-toggle="collapse" class="collapsed">
                             <span>系统设置</span></a>

@@ -11,10 +11,7 @@
                 <a class="this-page" href="{% url 'ATI:project' %}">项目管理</a>
             </li>
             <li class="active">
-                <a class="" href="{% url 'ATI:interface' %}?projectId={{ project_id }}">接口管理</a>
-            </li>
-            <li class="active">
-                <a class="">添加接口</a>
+                <a class="" href="{% url 'ATI:plans' %}?projectId={{ project_id }}">测试计划</a>
             </li>
         </ol>
     </div>
@@ -26,99 +23,66 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <h3 class="panel-title">添加接口</h3>
+                <h3 class="panel-title">编辑测试计划</h3>
             </div>
             <div class="panel-body">
                 <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">接口ID</label>
+                   <div class="form-group">
+                        <label class="col-sm-2 control-label">测试计划名称</label>
                         <div class="col-sm-6">
-                            <input type="text" id="interface_id" value="{{ interface.interface_id }}" class="form-control" readonly="readonly">
+                            <input type="text" id="name" class="form-control" value="{{ plan.name }}" readonly="readonly">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">接口名称</label>
+                        <label class="col-sm-2 control-label">测试计划描述</label>
                         <div class="col-sm-6">
-                            <input type="text" id="name" value="{{ interface.name }}" class="form-control">
+                            <textarea id="description" class="form-control" rows="2">{{ plan.description }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">接口URL</label>
-                        <div class="col-sm-6">
-                            <input type="text" id="interface" value="{{ interface.interface }}" class="form-control">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">接口协议</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="protocol" class="form-control" style="width: 120px;">
-                                <option value="http" selected="selected">http</option>
-                                <option value="https">https</option>
+                        <label class="col-sm-2 control-label">定时任务设置</label>
+                        <div class="col-sm-6" style="width: 170px;">
+                            <select id="timing" class="form-control" style="width: 150px;" onchange="set_time()">
+                                <option value="0" selected="selected">立即执行</option>
+                                <option value="1">仅执行一次</option>
+                                <option value="2">周期性执行</option>
+                                <option value="3">每天定时执行</option>
                             </select>
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">请求方法</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="method" class="form-control" style="width: 120px;">
-                                <option value="get" selected="selected">get</option>
-                                <option value="post">post</option>
-                                <option value="put">put</option>
-                                <option value="delete">delete</option>
+                        <label class="col-sm-2 control-label" id="time_set_label" style="display: none;">时间间隔</label>
+                        <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content">
+                            <input type="text" id="time_set" placeholder="单位：分钟" class="form-control">
+                        </div>
+                        <label class="col-sm-2 control-label" id="time_set_label1" style="display: none;">定时设置</label>
+                        <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content1">
+                            <input type="time" id="time_set1" value="" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">邮件设置</label>
+                        <div class="col-sm-6" style="width: 170px;">
+                            <select id="sending" class="form-control" style="width: 150px;" onchange="set_email()">
+                                <option value="0" selected="selected">不发送邮件</option>
+                                <option value="1">总是发送</option>
+                                <option value="2">仅失败发送</option>
+                                <option value="3">仅成功发送</option>
                             </select>
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">超时时间</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <input type="text" id="timeout" value="{{ interface.timeout}}" class="form-control">
+                        <label class="col-sm-2 control-label" id="receiver_label" style="display: none;">收件人组名</label>
+                        <div class="col-sm-6" id="receiver_content" style="width: 220px; display: none;">
+                            <input type="text" id="receiver_name" placeholder="例如：baidu_all" class="form-control">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">请求头</label>
+                    <div class="form-group" id="subject_div" style="display: none;">
+                        <label class="col-sm-2 control-label">邮件标题</label>
                         <div class="col-sm-6">
-                            <input type="text" id="header" value="{{ interface.header }}" class="form-control">
+                            <input type="text" id="subject" placeholder="邮件标题" class="form-control">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">请求参数</label>
+                    <div class="form-group" id="receiver_email_label" style="display: none;">
+                        <label class="col-sm-2 control-label">收件人邮箱</label>
                         <div class="col-sm-6">
-                            <textarea id="parameter" class="form-control" rows="3">{{ interface.parameter }}</textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">前置处理器</label>
-                        <div class="col-sm-6">
-                            <textarea id="pre_process" class="form-control" rows="6">{{ interface.pre_process }}</textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">后置处理器</label>
-                        <div class="col-sm-6">
-                            <textarea id="post_process" class="form-control" rows="6">{{ interface.post_process }}</textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">预期结果</label>
-                        <div class="col-sm-6">
-                            <textarea id="except_result" class="form-control" rows="2">{{ interface.except_result }}</textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">断言内容</label>
-                        <div class="col-sm-6" style="width: 450px;">
-                            <input type="text" id="assert_result" value="{{ interface.assert_result }}" class="form-control" style="width: 100%">
-                        </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">断言方法</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="assert_method" class="form-control" style="width: 120px;">
-                                <option value="contain" selected="selected">包含</option>
-                                <option value="contained">被包含</option>
-                                <option value="equal">等于</option>
-                                <option value="unequal">不等于</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">接口描述</label>
-                        <div class="col-sm-6">
-                            <textarea id="description" class="form-control" rows="1">{{ interface.description }}</textarea>
+                            <textarea id="receiver_email" placeholder="收件人邮箱，多个收件人用英文逗号分割" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -132,51 +96,168 @@
     </div>
 </div>
 <script type="text/javascript">
+    $(function () {
+        if ("{{ plan.timing }}" === "1" || "{{ plan.timing }}" === "3") {
+            let timing = document.getElementById('timing');
+            timing.options[0].selected = false;
+            document.getElementById('time_set1').value = "{{ plan.time_set }}";
+            document.getElementById('time_set_label1').style.display = "block";
+            document.getElementById('time_set_content1').style.display = "block";
+
+            if ("{{ plan.timing }}" === "1") {
+                timing.options[1].selected = true;
+            }
+            if ("{{ plan.timing }}" === "3") {
+                timing.options[3].selected = true;
+            }
+        } else if ("{{ plan.timing }}" === "2") {
+                let timing = document.getElementById('timing');
+                document.getElementById('time_set').value = "{{ plan.time_set }}";
+                document.getElementById('time_set_label').style.display = "block";
+                document.getElementById('time_set_content').style.display = "block";
+                timing.options[0].selected = false;
+                timing.options[1].selected = true;
+            }
+
+        if ("{{ plan.is_email }}" === "1") {
+            let sending = document.getElementById('sending');
+            sending.options[0].selected = false;
+            sending.options[1].selected = true;
+            sending.options[2].selected = false;
+            sending.options[3].selected = false;
+            document.getElementById('receiver_label').style.display = "block";
+            document.getElementById('receiver_content').style.display = "block";
+            document.getElementById('subject_div').style.display = "block";
+            document.getElementById('receiver_email_label').style.display = "block";
+            document.getElementById('receiver_name').value = "{{ receiver_name }}";
+            document.getElementById('subject').value = "{{ subject }}";
+            document.getElementById('receiver_email').value = "{{ receiver_email }}";
+        } else if ("{{ plan.is_email }}" === "2") {
+            let sending = document.getElementById('sending');
+            sending.options[0].selected = false;
+            sending.options[2].selected = true;
+            sending.options[1].selected = false;
+            sending.options[3].selected = false;
+            document.getElementById('receiver_label').style.display = "block";
+            document.getElementById('receiver_content').style.display = "block";
+            document.getElementById('subject_div').style.display = "block";
+            document.getElementById('receiver_email_label').style.display = "block";
+            document.getElementById('receiver_name').value = "{{ receiver_name }}";
+            document.getElementById('subject').value = "{{ subject }}";
+            document.getElementById('receiver_email').value = "{{ receiver_email }}";
+        } else if ("{{ plan.is_email }}" === "3") {
+            let sending = document.getElementById('sending');
+            sending.options[0].selected = false;
+            sending.options[3].selected = true;
+            sending.options[1].selected = false;
+            sending.options[2].selected = false;
+            document.getElementById('receiver_label').style.display = "block";
+            document.getElementById('receiver_content').style.display = "block";
+            document.getElementById('subject_div').style.display = "block";
+            document.getElementById('receiver_email_label').style.display = "block";
+            document.getElementById('receiver_name').value = "{{ receiver_name }}";
+            document.getElementById('subject').value = "{{ subject }}";
+            document.getElementById('receiver_email').value = "{{ receiver_email }}";
+        }
+    })
+
     $("#Save").click(function () {
-        let interface_id = document.getElementById('interface_id').value;
         let name = document.getElementById('name').value;
-        let interface1 = document.getElementById('interface').value;
-        let protocol = document.getElementById('protocol').value;
-        let method = document.getElementById('method').value;
-        let timeout = document.getElementById('timeout').value;
-        let header = document.getElementById('header').value;
-        let parameter = document.getElementById('parameter').value;
-        let pre_process = document.getElementById('pre_process').value;
-        let post_process = document.getElementById('post_process').value;
-        let except_result = document.getElementById('except_result').value;
-        let assert_result = document.getElementById('assert_result').value;
-        let assert_method = document.getElementById('assert_method').value;
-        let description = document.getElementById('description').value;
+        let desc = document.getElementById('description').value;
+        let timing = document.getElementById('timing').value;
+        let time_set = document.getElementById('time_set').value;
+        let time_set1 = document.getElementById('time_set1').value;
+        let sending = document.getElementById('sending').value;
+        let receiver_name = document.getElementById('receiver_name').value;
+        let subject = document.getElementById('subject').value;
+        let receiver_email = document.getElementById('receiver_email').value;
+
+        if (timing === "0") {
+            time_set = "";
+            time_set1 = "";
+        } else if (timing === "2") {
+            time_set1 = "";
+        } else {
+            time_set = "";
+        }
+
+        if (sending === "0") {
+            receiver_name = "";
+            subject = "";
+            receiver_email = "";
+        }
         let postdata = {
+            Id: {{ plan.id }},
             name: name,
-            interface_id: interface_id,
-            project_id: {{ project_id }},
-            interface: interface1,
-            protocol: protocol,
-            method: method,
-            timeout: timeout,
-            header: header,
-            parameter: parameter,
-            pre_process: pre_process,
-            post_process: post_process,
-            except_result: except_result,
-            assert_result: assert_result,
-            assert_method: assert_method,
-            description: description,
+            description: desc,
+            timing: timing,
+            interval: time_set,
+            time_setting: time_set1,
+            sending: sending,
+            receiver_name: receiver_name,
+            subject: subject,
+            receiver_email: receiver_email,
+            project_id: "{{ project_id }}",
         };
         $.ajax({
             type: 'post',
-            url: "{% url 'ATI:edit_interface' %}",
+            url: "{% url 'ATI:edit_plan' %}",
             data: postdata,
             datatype: 'json',
             success: function (data) {
                 if(data['code'] === 1) {
-                    $.Toast(data['msg'], 'error');
+                    $.Toast(data['msg'], 'warning');
                 } else {
-                    window.location.href="{% url 'ATI:interface' %}?projectId=" + {{ project_id }};
+                    $.Toast(data['msg'], 'success');
+                    window.location.href="{% url 'ATI:plans' %}?projectId={{ project_id }}";
                 }
             },
         });
     });
+
+    function set_time() {
+        let timing = document.getElementById('timing').value;
+        let label = document.getElementById('time_set_label');
+        let label1 = document.getElementById('time_set_label1');
+        let time_set = document.getElementById('time_set_content');
+        let time_set1 = document.getElementById('time_set_content1');
+        if (timing === "2"){
+            label.style.display = "block";
+            label1.style.display = "none";
+            time_set.style.display = "block";
+            time_set1.style.display = "none";
+        } else if (timing === "3" || timing === "1") {
+            let current_time = new Date();
+            document.getElementById('time_set1').value = current_time.getHours() + ':' + current_time.getMinutes();
+            label1.style.display = "block";
+            label.style.display = "none";
+            time_set1.style.display = "block";
+            time_set.style.display = "none";
+        } else {
+            label.style.display = "none";
+            label1.style.display = "none";
+            time_set.style.display = "none";
+            time_set1.style.display = "none";
+        }
+    }
+
+    function set_email() {
+        let sending = document.getElementById('sending').value;
+        let receiver_label = document.getElementById('receiver_label');
+        let receiver_content = document.getElementById('receiver_content');
+        let subject_div = document.getElementById('subject_div');
+        let receiver_email_label = document.getElementById('receiver_email_label');
+        if (sending === "0"){
+            receiver_label.style.display = "none";
+            receiver_content.style.display = "none";
+            subject_div.style.display = "none";
+            receiver_email_label.style.display = "none";
+        } else if (sending === "1") {
+            receiver_label.style.display = "block";
+            receiver_content.style.display = "block";
+            subject_div.style.display = "block";
+            receiver_email_label.style.display = "block";
+        }
+    }
 </script>
 {% endblock%}
