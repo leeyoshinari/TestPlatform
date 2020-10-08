@@ -77,4 +77,4 @@ class compare(object):
 			self.reason = ''
 		else:
 			self.flag = 0
-			self.reason = f'Value of "{key}" is incorrect'
+			self.reason = f'Value of "{key}" is unequal'

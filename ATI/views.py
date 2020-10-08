@@ -257,7 +257,7 @@ def add_interface(request):
 						timeout=timeout, header=request.POST.get('header'),
 						pre_process=request.POST.get('pre_process'), post_process=request.POST.get('post_process'),
 						except_result=request.POST.get('except_result'), assert_method=request.POST.get('assert_method'),
-						assert_result=request.POST.get('assert_result'), description=request.POST.get('description'),
+						true_result=request.POST.get('true_result'), description=request.POST.get('description'),
 						created_by=user_name, updated_by=user_name, create_time=time_strftime(),
 						update_time=time_strftime()
 					)
@@ -295,7 +295,7 @@ def edit_interface(request):
 		r.post_process = request.POST.get('post_process')
 		r.except_result = request.POST.get('except_result')
 		r.assert_method = request.POST.get('assert_method')
-		r.assert_result = request.POST.get('assert_result')
+		r.true_result = request.POST.get('true_result')
 		r.description = request.POST.get('description')
 		r.updated_by = user_name
 		r.update_time = time_strftime()

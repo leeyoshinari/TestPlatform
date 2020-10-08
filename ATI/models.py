@@ -17,7 +17,7 @@ class Interfaces(models.Model):
 	post_process = models.CharField(max_length=200, default=None, null=True, verbose_name='后置处理器')
 	expect_result = models.CharField(max_length=200, default=None, null=True, verbose_name='预期结果，仅支持json')
 	assert_method = models.CharField(max_length=10, default='contain', verbose_name='断言方法，包含、等于、不等于、被包含')
-	assert_result = models.CharField(max_length=200, default=None, null=True, verbose_name='断言内容')
+	true_result = models.CharField(max_length=200, default=None, null=True, verbose_name='实际结果')
 	description = models.CharField(max_length=250, default=None, null=True, verbose_name='接口描述')
 	created_by = models.CharField(max_length=20, default=None, null=True, verbose_name='创建人')
 	updated_by = models.CharField(max_length=20, default=None, null=True, verbose_name='更新人')
@@ -53,7 +53,7 @@ class InterfaceScene(models.Model):
 
 	class Meta:
 		db_table = 'ati_interface_scene'
-		indexes = [models.Index(fields=['scene_id', 'display_sort'])]
+		indexes = [models.Index(fields=['display_sort'])]
 
 class Plans(models.Model):
 	id = models.CharField(max_length=20, unique=True, primary_key=True, verbose_name='测试计划id')
@@ -84,7 +84,7 @@ class ScenePlan(models.Model):
 
 	class Meta:
 		db_table = 'ati_scene_plan'
-		indexes = [models.Index(fields=['plan_id', 'display_sort'])]
+		indexes = [models.Index(fields=['display_sort'])]
 
 
 class Variables(models.Model):
@@ -99,4 +99,4 @@ class Variables(models.Model):
 
 	class Meta:
 		db_table = 'ati_variables'
-		indexes = [models.Index(fields=['plan_id', 'update_time'])]
+		indexes = [models.Index(fields=['update_time'])]

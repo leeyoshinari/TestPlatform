@@ -24,7 +24,7 @@ def read_scene(plan_id):
                 'post_process': case_info.post_process,
                 'expect_result': case_info.expect_result,
                 'assert_method': case_info.assert_method,
-                'assert_result': case_info.assert_result,
+                'true_result': case_info.true_result,
             }
             yield data
 

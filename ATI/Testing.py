@@ -28,7 +28,6 @@ class Testing(object):
 		self.plan_setting = read_setting(args[1])
 
 		self.is_send_email = getConfig('isSendEmail')
-
 		self.test_result = {}
 
 		self.run(args)
@@ -58,40 +57,27 @@ class Testing(object):
 					logger.debug(f"{case['case_id']}-->{case['url']}-->{res.content.decode()}")
 
 					if res.status_code == 200:      # 如果响应状态码为200
-						response = json.loads(res.content.decode())
+						response = res.content.decode()
 						response_time = int(res.elapsed.microseconds / 1000)
 
-						if case['assert_result']:        # 如果响应断言不为空
-							flag = self.assert_result(case['assert_method'], case['assert_result'], response)
+						# 后置处理器，response是字符串，如果是json格式，需要json.loads
+						if case['post_process']:
+							self.processor(case['post_process'], response=response)
 
-							if flag == 0:   # 断言失败
-								result = 'Failure'
-								reason = f"Assertion failure: text expected to {case['assert_method']} {case['assert_result']}"
-								log_str = reason
-							else:
-								result = 'Success'
-								reason = ''
-								log_str = ''
+						# 替换变量
+						case['true_result'] = self.compile(case['true_result'])
+						case['expect_result'] = self.compile(case['expect_result'])
 
-						elif case['expect_result']:     # 如果响应断言为空，期望结果不为空，仅支持json格式
-							flag, reason = compare().compare(json.loads(case['expect_result']), response)   # 逐个字段比较响应结果
-							if flag == 0:
-								result = 'Failure'
-								log_str = reason
-							else:
-								result = 'Success'
-								reason = ''
-								log_str = ''
+						if not case['true_result']:
+							case['true_result'] = response
 
-						else:       # 如果响应断言为空，且期望结果为空
-							flag = 2
+						if case['expect_result']:        # 如果预期结果不为空
+							result, reason = self.assert_result(case['assert_method'], case['expect_result'], case['true_result'])
+							log_str = reason
+						else:       # 如果预期结果为空
 							result = 'Unknown'
 							reason = 'Warning: Not verify the result'
 							log_str = reason
-
-						# 后置处理器，response已经是一个字典或列表了
-						if flag > 0 and case['post_process']:
-							self.processor(case['post_process'], response)
 
 					else:       # 如果响应状态码不为200
 						response = ''
@@ -204,13 +190,13 @@ class Testing(object):
 		output_dict = {}
 		for s in input_str:
 			if s:
-				input_dict.update({s: self.global_variable.get[s]})
+				input_dict.update({s: self.global_variable.get(s, default=None)})
 
 		exec(expression, input_dict, output_dict)
 
 		for s in output_str:
 			if s:
-				self.global_variable.update({s: output_dict[s]})
+				self.global_variable.update({s: output_dict.get(s, default=None)})
 
 
 	def compile(self, data):
@@ -229,22 +215,34 @@ class Testing(object):
 
 		return data
 
-	def assert_result(self, assert_method, assert_content, response):
-		flag = 0
-		if assert_method == 'contain':
-			if assert_content in str(response):
-				flag = 1
-		if assert_method == 'contained':
-			if str(response) in assert_content:
-				flag = 1
+	def assert_result(self, assert_method, expect_res, true_res):
 		if assert_method == 'equal':
-			if str(assert_content) == str(response):
-				flag = 1
-		if assert_method == 'unequal':
-			if str(assert_content) != str(response):
-				flag = 1
+			try:
+				expect_dict = json.loads(expect_res)
+				true_dict = json.loads(true_res)
+				# 如果是json格式，尝试逐字段比较
+				# 为什么不直接字典比较，因为字典比较时，1和1.0是相等的，这是不严谨的
+				flag, reason = compare().compare(expect_dict, true_dict)
+				if flag == 1:
+					result = 'Success'
+				else:
+					result = 'Failure'
+			except json.decoder.JSONDecodeError:
+				if str(expect_res) == str(true_res):
+					result = 'Success'
+					reason = ''
+				else:
+					result = 'Failure'
+					reason = f"Assertion failure: text expected to equal {true_res}"
+		else:
+			if expect_res in str(json.loads(true_res)):	# json.loads是避免中文乱码影响断言
+				result = 'Success'
+				reason = ''
+			else:
+				result = 'Failure'
+				reason = f"Assertion failure: text expected to contain {true_res}"
 
-		return flag
+		return result, reason
 
 
 	def __del__(self):
