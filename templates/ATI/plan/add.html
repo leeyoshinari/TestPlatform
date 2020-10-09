@@ -142,6 +142,7 @@
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'warning');
                 } else {
+                    $.Toast(data['msg'], 'success');
                     window.location.href="{% url 'ATI:plans' %}?projectId={{ project_id }}";
                 }
             },

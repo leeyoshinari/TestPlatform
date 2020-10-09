@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block addcss %}
+    <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+{% endblock %}
+
+{% block addjs %}
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/vendor/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="/static/scripts/klorofil-common.js"></script>
+{% endblock %}
+
+
+{% block addbody %}
+<div id="wrapper">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-default navbar-fixed-top" style="height: 50px">
+        <div class="brand">
+            <a href="{% url 'home' %}"><h3 style="margin-top: 10px; margin-left: 10px;">平台首页</h3></a>
+        </div>
+        <div class="container-fluid" style="height: 50px">
+            <!-- <div class="navbar-btn">
+                <button type="button" class="btn-toggle-fullwidth"><i class="lnr lnr-arrow-left-circle"></i></button>
+            </div> -->
+            <div id="navbar-menu">
+                <ul class="nav navbar-nav navbar-right" style="height: 50px">
+                    <li class="dropdown" style="height: 50px">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="height: 50px">
+                            <!-- <img src="/static/img/user.png" class="img-circle" alt="Avatar"> -->
+                            <h4 style="margin-top: -10px;">{{ username }}</h4> <!-- <i class="icon-submenu lnr lnr-chevron-down"></i> --></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#"><span>我的信息</span></a></li>
+                            <li><a href="{% url 'user:changePwd' %}"><span>修改密码</span></a></li>
+                            <li><a href="{% url 'user:logout' %}"><span>退出登录</span></a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="all_index">
+        <div class="panel-body">
+                <div class="form-horizontal">
+                    <div class="form-group" style="margin-left: 22%;">
+                        <label class="col-sm-2 control-label">输入原密码</label>
+                        <div class="col-sm-6" style="width: 33%;">
+                            <input type="password" id="old" placeholder="请输入原密码" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-left: 22%;">
+                        <label class="col-sm-2 control-label">输入新密码</label>
+                        <div class="col-sm-6" style="width: 33%;">
+                            <input type="password" id="new" placeholder="请输入新密码，新密码必须包含至少8个字符" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-left: 22%;">
+                        <label class="col-sm-2 control-label">再确认新密码</label>
+                        <div class="col-sm-6" style="width: 33%;">
+                            <input type="password" id="new_1" placeholder="请再确认新密码" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-6" style="margin-left: 40%;">
+                            <button id="Save" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+<script type="text/javascript">
+$("#Save").click(function () {
+        let old_pwd = document.getElementById('old').value;
+        let new_pwd = document.getElementById('new').value;
+        let new_pwd1 = document.getElementById('new_1').value;
+
+        if (new_pwd !== new_pwd1) {
+            $.Toast('两次输入新密码不一样', 'error');
+            return;
+        }
+
+        if (!(new_pwd && new_pwd1)) {
+            $.Toast('请输入密码', 'error');
+            return;
+        }
+
+        let postdata = {
+            old_pwd: old_pwd,
+            new_pwd: new_pwd,
+        };
+        $.ajax({
+            type: 'post',
+            url: "{% url 'user:changePwd' %}",
+            data: postdata,
+            datatype: 'json',
+            success: function (data) {
+                if(data['code'] === 1) {
+                    $.Toast(data['msg'], 'warning');
+                } else {
+                    $.Toast(data['msg'], 'success');
+                    window.location.href="{% url 'user:logout' %}";
+                }
+            },
+        });
+    });
+</script>
+{% endblock %}

@@ -22,7 +22,7 @@
 <div class="row">
     <div class="col-md-12">
         <div class="panel">
-            <div class="panel-heading">
+            <div class="panel-heading" style="padding-bottom: 0px;">
                 <h3 class="panel-title">新增接口</h3>
             </div>
             <div class="panel-body">
@@ -55,16 +55,16 @@
                         </div>
                         <!--<label class="col-sm-2 control-label" style="width: 9%">请求方法</label>-->
                         <label class="col-sm-2 control-label">请求方法</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="method" class="form-control" style="width: 120px;">
+                        <div class="col-sm-6" style="width: 20%;">
+                            <select id="method" class="form-control" style="width: 100%;">
                                 <option value="get" selected="selected">get</option>
                                 <option value="post">post</option>
                                 <option value="put">put</option>
                                 <option value="delete">delete</option>
                             </select>
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">超时时间</label>
-                        <div class="col-sm-6" style="width: 150px;">
+                        <label class="col-sm-2 control-label" style="width: 20%">超时时间</label>
+                        <div class="col-sm-6" style="width: 20%;">
                             <input type="text" id="timeout" placeholder="单位: ms" class="form-control">
                         </div>
                     </div>
@@ -77,38 +77,43 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">请求参数</label>
                         <div class="col-sm-6">
-                            <textarea id="parameter" placeholder="请求参数" class="form-control" rows="3"></textarea>
+                            <textarea id="parameter" placeholder="请求参数" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">前置处理器</label>
                         <div class="col-sm-6">
-                            <textarea id="pre_process" placeholder="请输入前置处理器的python脚本" class="form-control" rows="6"></textarea>
+                            <textarea id="pre_process" placeholder="python语法，示例：（两个“${}”中的字母是变量，多个变量用英文逗号隔开）
+#${}${b}     # 第一个“${}”中的字母是输入变量名，没有字母表示为空，第二个“${}”中的b是输出变量名
+b=1       # 直接将1赋值给b，同时b输出，通过“${b}”即可引用b的值
+c=2       # 直接将2赋值给c，因为第二个“${}”中没有c，所以c不输出，不能引用c的值" class="form-control" rows="4"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">后置处理器</label>
                         <div class="col-sm-6">
-                            <textarea id="post_process" placeholder="请输入后置处理器的python脚本" class="form-control" rows="6"></textarea>
+                            <textarea id="post_process" placeholder="python语法，示例：（后置处理器默认传入当前接口响应值，变量名为response，格式为字符串）
+#${a}${b,c}     # 第一个“${}”中的a是输入变量名，第二个“${}”中的b,c是输出变量名
+b=a+1       # 将a的值+1，并赋值给b，同时b输出，通过“${b}”即可引用b的值
+c=int(response)+1       # 将接口响应值+1，并赋值给c，同时c输出，通过“${c}”即可引用c的值" class="form-control" rows="4"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">预期结果</label>
-                        <div class="col-sm-6">
-                            <textarea id="except_result" placeholder="预期结果" class="form-control" rows="2"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">实际结果</label>
-                        <div class="col-sm-6" style="width: 450px;">
+                        <label class="col-sm-2 control-label" style="width: 15%;">断言</label>
+                        <label class="col-sm-2 control-label" style="width: 6%;">实际结果</label>
+                        <div class="col-sm-6" style="width: 21%; padding-left: 0px;">
                             <input type="text" id="true_result" placeholder="实际结果，如果为空，则默认为接口响应值" class="form-control" style="width: 100%">
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">断言方法</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="assert_method" class="form-control" style="width: 120px;">
+                        <label class="col-sm-2 control-label" style="width: 9%; display: none;">断言方法</label>
+                        <div class="col-sm-6" style="width: 8%; padding-left: 0px;">
+                            <select id="assert_method" class="form-control" style="width: 100%;">
                                 <option value="contain" selected="selected">包含</option>
                                 <option value="equal">等于</option>
                             </select>
+                        </div>
+                        <label class="col-sm-2 control-label" style="width: 6%;">预期结果</label>
+                        <div class="col-sm-6" style="width: 21%; padding-left: 0px;">
+                            <textarea id="expect_result" placeholder="预期结果" class="form-control" rows="1"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -139,7 +144,7 @@
         let parameter = document.getElementById('parameter').value;
         let pre_process = document.getElementById('pre_process').value;
         let post_process = document.getElementById('post_process').value;
-        let except_result = document.getElementById('except_result').value;
+        let expect_result = document.getElementById('expect_result').value;
         let true_result = document.getElementById('true_result').value;
         let assert_method = document.getElementById('assert_method').value;
         let description = document.getElementById('description').value;
@@ -155,7 +160,7 @@
             parameter: parameter,
             pre_process: pre_process,
             post_process: post_process,
-            except_result: except_result,
+            expect_result: expect_result,
             true_result: true_result,
             assert_method: assert_method,
             description: description,
@@ -169,6 +174,7 @@
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'error');
                 } else {
+                    $.Toast(data['msg'], 'success');
                     window.location.href="{% url 'ATI:interface' %}?projectId=" + {{ project_id }};
                 }
             },
