@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Author: leeyoshinari
+
+import re
 import logging
 from django.shortcuts import render, redirect
 from django.contrib import auth
@@ -47,29 +52,6 @@ def login(request):
         return render(request, 'user/login.html')
 
 
-'''def sign(request):
-    """
-    注册用户
-    :param request:
-    :return:
-    """
-    if request.method == 'POST':
-        if request.POST:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-
-            if UserModel.objects.filter(username=username):
-                return JsonResponse({'code': 1, 'msg': '用户已存在，请登录', 'data': None})
-            else:
-                UserModel.objects.create(username=username, password=password, create_time=time_strftime(),
-                                         user_id='', last_login_time=time_strftime())
-                return JsonResponse({'code': 0, 'msg': '注册成功', 'data': {'username': username}})
-        else:
-            return JsonResponse({'code': 1, 'msg': '参数异常', 'data': None})
-    else:
-        return render(request, 'user/sign.html')'''
-
-
 def logout(request):
     auth.logout(request)
     logger.info(f"{request.user.username}登出成功！")
@@ -78,14 +60,24 @@ def logout(request):
 
 def changePwd(request):
     if request.method == 'POST':
-        old_pwd = request.POST.get('old_pwd')
-        if request.user.check_password(old_pwd):
-            new_pwd = request.POST.get('new_pwd')
-            request.user.set_password(new_pwd)
-            request.user.save()
-            return JsonResponse({'code': 0, 'msg': '密码修改成功', 'data': None})
+        try:
+            old_pwd = request.POST.get('old_pwd')
+            if request.user.check_password(old_pwd):
+                new_pwd = request.POST.get('new_pwd')
+                if re.match('^[0-9A-Za-z]{8,20}$', new_pwd):
+                    request.user.set_password(new_pwd)
+                    request.user.save()
+                    return JsonResponse({'code': 0, 'msg': '密码修改成功', 'data': None})
+                else:
+                    return JsonResponse({'code': 1, 'msg': '请输入8-20位字符的密码', 'data': None})
+            else:
+                return JsonResponse({'code': 1, 'msg': '原密码输入不正确', 'data': None})
+        except Exception as err:
+            logger.error(err)
+            return JsonResponse({'code': 1, 'msg': '密码修改失败', 'data': None})
     else:
-        return render(request, 'user/sign.html')
+        user_name = request.user.username
+        return render(request, 'user/changepwd.html', context={'username': user_name})
 
 
 def userInfo(request):

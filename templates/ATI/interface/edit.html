@@ -22,7 +22,7 @@
 <div class="row">
     <div class="col-md-12">
         <div class="panel">
-            <div class="panel-heading">
+            <div class="panel-heading" style="padding-bottom: 0px;">
                 <h3 class="panel-title">编辑接口</h3>
             </div>
             <div class="panel-body">
@@ -59,16 +59,16 @@
                         </div>
                         <!--<label class="col-sm-2 control-label" style="width: 9%">请求方法</label>-->
                         <label class="col-sm-2 control-label">请求方法</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="method" class="form-control" style="width: 120px;">
+                        <div class="col-sm-6" style="width: 20%;">
+                            <select id="method" class="form-control" style="width: 100%;">
                                 <option value="get" selected="selected">get</option>
                                 <option value="post">post</option>
                                 <option value="put">put</option>
                                 <option value="delete">delete</option>
                             </select>
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">超时时间</label>
-                        <div class="col-sm-6" style="width: 150px;">
+                        <label class="col-sm-2 control-label" style="width: 20%">超时时间</label>
+                        <div class="col-sm-6" style="width: 20%;">
                             <input type="text" id="timeout" value="{{ interface.timeout}}" class="form-control">
                         </div>
                     </div>
@@ -81,38 +81,37 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">请求参数</label>
                         <div class="col-sm-6">
-                            <textarea id="parameter" class="form-control" rows="3">{{ interface.parameter }}</textarea>
+                            <textarea id="parameter" class="form-control" rows="2">{{ interface.parameter }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">前置处理器</label>
                         <div class="col-sm-6">
-                            <textarea id="pre_process" class="form-control" rows="6">{{ interface.pre_process }}</textarea>
+                            <textarea id="pre_process" class="form-control" rows="4">{{ interface.pre_process }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">后置处理器</label>
                         <div class="col-sm-6">
-                            <textarea id="post_process" class="form-control" rows="6">{{ interface.post_process }}</textarea>
+                            <textarea id="post_process" class="form-control" rows="4">{{ interface.post_process }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">预期结果</label>
-                        <div class="col-sm-6">
-                            <textarea id="except_result" class="form-control" rows="2">{{ interface.except_result }}</textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">实际结果</label>
-                        <div class="col-sm-6" style="width: 450px;">
+                        <label class="col-sm-2 control-label" style="width: 15%;">断言</label>
+                        <label class="col-sm-2 control-label" style="width: 6%;">实际结果</label>
+                        <div class="col-sm-6" style="width: 21%; padding-left: 0px;">
                             <input type="text" id="true_result" value="{{ interface.true_result }}" class="form-control" style="width: 100%">
                         </div>
-                        <label class="col-sm-2 control-label" style="width: 9%">断言方法</label>
-                        <div class="col-sm-6" style="width: 150px;">
-                            <select id="assert_method" class="form-control" style="width: 120px;">
+                        <label class="col-sm-2 control-label" style="width: 9%; display: none;">断言方法</label>
+                        <div class="col-sm-6" style="width: 8%; padding-left: 0px;">
+                            <select id="assert_method" class="form-control" style="width: 100%;">
                                 <option value="contain" selected="selected">包含</option>
                                 <option value="equal">等于</option>
                             </select>
+                        </div>
+                        <label class="col-sm-2 control-label" style="width: 6%;">预期结果</label>
+                        <div class="col-sm-6" style="width: 21%; padding-left: 0px;">
+                            <textarea id="expect_result" class="form-control" rows="1">{{ interface.expect_result }}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -181,7 +180,7 @@
         let parameter = document.getElementById('parameter').value;
         let pre_process = document.getElementById('pre_process').value;
         let post_process = document.getElementById('post_process').value;
-        let except_result = document.getElementById('except_result').value;
+        let expect_result = document.getElementById('expect_result').value;
         let true_result = document.getElementById('true_result').value;
         let assert_method = document.getElementById('assert_method').value;
         let description = document.getElementById('description').value;
@@ -197,7 +196,7 @@
             parameter: parameter,
             pre_process: pre_process,
             post_process: post_process,
-            except_result: except_result,
+            expect_result: expect_result,
             true_result: true_result,
             assert_method: assert_method,
             description: description,
@@ -216,6 +215,7 @@
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'error');
                 } else {
+                    $.Toast(data['msg'], 'success');
                     window.location.href="{% url 'ATI:interface' %}?projectId={{ project_id }}";
                 }
             },

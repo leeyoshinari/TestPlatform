@@ -1899,9 +1899,10 @@ table.table-mail tr td {
   top: 300px;
   left: 50px;
   /*padding-right: 100px;*/
-  /*width: 100%;*/
+  width: 600%;
   height: 200px;
   list-style: none;
+  margin-left: 20%;
   position: absolute;
 }
 

@@ -26,7 +26,7 @@ SECRET_KEY = 'za5j!z&*6tz_83a5j$p59o5oq@%xmms@4b5ubbrmn0&&55b1yd'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [getConfig('host')]
 
 
 # Application definition
@@ -181,7 +181,7 @@ LOGGING = {
     'loggers': {
        # 默认的logger应用如下配置
         'django': {
-            'handlers': ['default', 'console'],  # 上线之后可以把'console'移除
+            'handlers': ['default'],  # 上线之后可以把'console'移除
             'level': getConfig('level'),
             'propagate': True,  # 向不向更高级别的logger传递
         }

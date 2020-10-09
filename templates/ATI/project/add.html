@@ -69,6 +69,7 @@
                 if(data['code'] === 1) {
                     $.Toast(data['msg'], 'warning');
                 } else {
+                    $.Toast(data['msg'], 'success');
                     window.location.href="{% url 'ATI:project' %}";
                 }
             },

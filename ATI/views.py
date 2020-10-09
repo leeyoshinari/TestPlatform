@@ -108,13 +108,18 @@ def add_project(request):
 				logger.warning('项目已存在，请勿重复添加')
 				return JsonResponse({'code': 1, 'msg': '项目已存在，请勿重复添加！', 'data': None})
 			else:
-				desc = request.POST.get('description')
-				pro_id = str(int(time.time() * 10000))
-				Projects.objects.create(id=pro_id, name=name, description=desc, type='ATI', create_time=time_strftime(), update_time=time_strftime())
-				project_id = Projects.objects.get(type='ATI', name=name).id
-				UserProject.objects.create(user_name=user_name, project_id=project_id, type='ATI', create_time=time_strftime())
-				logger.info(f'{user_name}---{name}项目创建成功')
-				return JsonResponse({'code': 0, 'msg': '项目创建成功', 'data': None})
+				try:
+					desc = request.POST.get('description')
+					pro_id = str(int(time.time() * 10000))
+					Projects.objects.create(id=pro_id, name=name, description=desc, type='ATI', create_time=time_strftime(), update_time=time_strftime())
+					project_id = Projects.objects.get(type='ATI', name=name).id
+					UserProject.objects.create(user_name=user_name, project_id=project_id, type='ATI', create_time=time_strftime())
+					logger.info(f'{user_name}---{name}项目创建成功')
+					return JsonResponse({'code': 0, 'msg': '项目创建成功', 'data': None})
+				except Exception as err:
+					logger.error(err)
+					logger.error(traceback.format_exc())
+					return JsonResponse({'code': 1, 'msg': '项目创建失败，请检查参数是否正确', 'data': None})
 		else:
 			logger.error('项目名称不能为空')
 			return JsonResponse({'code': 1, 'msg': '项目名称不能为空', 'data': None})
@@ -127,15 +132,20 @@ def update_project(request):
 	更新项目信息
 	"""
 	if request.method == 'POST':
-		name = request.POST.get('name')
-		user_name = request.user.username
-		r = Projects.objects.get(type='ATI', name=name)
-		r.name = name
-		r.description = request.POST.get('description')
-		r.update_time = time_strftime()
-		r.save()
-		logger.info(f'{user_name}---项目保存成功')
-		return JsonResponse({'code': 0, 'msg': '项目保存成功', 'data': None})
+		try:
+			name = request.POST.get('name')
+			user_name = request.user.username
+			r = Projects.objects.get(type='ATI', name=name)
+			r.name = name
+			r.description = request.POST.get('description')
+			r.update_time = time_strftime()
+			r.save()
+			logger.info(f'{user_name}---项目保存成功')
+			return JsonResponse({'code': 0, 'msg': '项目保存成功', 'data': None})
+		except Exception as err:
+			logger.error(err)
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '项目更新失败', 'data': None})
 
 	if request.method == 'GET':
 		name = request.GET.get('name')
@@ -249,20 +259,25 @@ def add_interface(request):
 					logger.warning('接口ID已存在，请勿重复添加')
 					return JsonResponse({'code': 1, 'msg': '接口ID已存在，请勿重复添加！', 'data': None})
 				else:
-					timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
-					Interfaces.objects.create(
-						interface_id=interface_id, project_id=project_id, name=request.POST.get('name'),
-						interface=interface, protocol=request.POST.get('protocol'),
-						method=request.POST.get('method'), parameter=request.POST.get('parameter'),
-						timeout=timeout, header=request.POST.get('header'),
-						pre_process=request.POST.get('pre_process'), post_process=request.POST.get('post_process'),
-						except_result=request.POST.get('except_result'), assert_method=request.POST.get('assert_method'),
-						true_result=request.POST.get('true_result'), description=request.POST.get('description'),
-						created_by=user_name, updated_by=user_name, create_time=time_strftime(),
-						update_time=time_strftime()
-					)
-					logger.info(f'{user_name}---{interface_id}接口创建成功')
-					return JsonResponse({'code': 0, 'msg': '接口创建成功', 'data': None})
+					try:
+						timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
+						Interfaces.objects.create(
+							interface_id=interface_id, project_id=project_id, name=request.POST.get('name'),
+							interface=interface, protocol=request.POST.get('protocol'),
+							method=request.POST.get('method'), parameter=request.POST.get('parameter'),
+							timeout=timeout, header=request.POST.get('header'),
+							pre_process=request.POST.get('pre_process'), post_process=request.POST.get('post_process'),
+							expect_result=request.POST.get('expect_result'), assert_method=request.POST.get('assert_method'),
+							true_result=request.POST.get('true_result'), description=request.POST.get('description'),
+							created_by=user_name, updated_by=user_name, create_time=time_strftime(),
+							update_time=time_strftime()
+						)
+						logger.info(f'{user_name}---{interface_id}接口创建成功')
+						return JsonResponse({'code': 0, 'msg': '接口创建成功', 'data': None})
+					except Exception as err:
+						logger.error(err)
+						logger.error(traceback.format_exc())
+						return JsonResponse({'code': 1, 'msg': '接口新增异常，请检查参数是否正确', 'data': None})
 			else:
 				logger.error('接口url不能为空')
 				return JsonResponse({'code': 1, 'msg': '接口url不能为空', 'data': None})
@@ -280,28 +295,33 @@ def edit_interface(request):
 	编辑接口
 	"""
 	if request.method == 'POST':
-		interface_id = request.POST.get('interface_id')
-		project_id = request.POST.get('project_id')
-		user_name = request.user.username
-		r = Interfaces.objects.get(interface_id=interface_id, project_id=project_id)
-		r.name = request.POST.get('name')
-		r.interface = request.POST.get('interface')
-		r.protocol = request.POST.get('protocol')
-		r.method = request.POST.get('method')
-		r.parameter = request.POST.get('parameter')
-		r.timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
-		r.header = request.POST.get('header')
-		r.pre_process = request.POST.get('pre_process')
-		r.post_process = request.POST.get('post_process')
-		r.except_result = request.POST.get('except_result')
-		r.assert_method = request.POST.get('assert_method')
-		r.true_result = request.POST.get('true_result')
-		r.description = request.POST.get('description')
-		r.updated_by = user_name
-		r.update_time = time_strftime()
-		r.save()
-		logger.info(f'{user_name}---{interface_id}接口修改成功')
-		return JsonResponse({'code': 0, 'msg': '接口修改成功', 'data': None})
+		try:
+			interface_id = request.POST.get('interface_id')
+			project_id = request.POST.get('project_id')
+			user_name = request.user.username
+			r = Interfaces.objects.get(interface_id=interface_id, project_id=project_id)
+			r.name = request.POST.get('name')
+			r.interface = request.POST.get('interface')
+			r.protocol = request.POST.get('protocol')
+			r.method = request.POST.get('method')
+			r.parameter = request.POST.get('parameter')
+			r.timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
+			r.header = request.POST.get('header')
+			r.pre_process = request.POST.get('pre_process')
+			r.post_process = request.POST.get('post_process')
+			r.expect_result = request.POST.get('expect_result')
+			r.assert_method = request.POST.get('assert_method')
+			r.true_result = request.POST.get('true_result')
+			r.description = request.POST.get('description')
+			r.updated_by = user_name
+			r.update_time = time_strftime()
+			r.save()
+			logger.info(f'{user_name}---{interface_id}接口修改成功')
+			return JsonResponse({'code': 0, 'msg': '接口修改成功', 'data': None})
+		except Exception as err:
+			logger.error(err)
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '接口保存异常，请检查参数是否正确', 'data': None})
 
 	if request.method == 'GET':
 		interface_id = request.GET.get('Id')
@@ -335,7 +355,7 @@ def delete_interface(request):
 
 def scenes(request):
 	"""
-	查询用例
+	查询场景
 	"""
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
@@ -364,7 +384,7 @@ def scenes(request):
 
 def add_scene(request):
 	"""
-		添加用例
+		添加场景
 	"""
 	if request.method == 'POST':
 		name = request.POST.get('name')
@@ -372,17 +392,22 @@ def add_scene(request):
 		user_name = request.user.username
 		if name:
 			if Scenes.objects.filter(name=name, project_id=project_id):
-				logger.warning('用例已存在，请勿重复添加')
-				return JsonResponse({'code': 1, 'msg': '用例已存在，请勿重复添加！', 'data': None})
+				logger.warning('场景已存在，请勿重复添加')
+				return JsonResponse({'code': 1, 'msg': '场景已存在，请勿重复添加！', 'data': None})
 			else:
-				desc = request.POST.get('description')
-				cas_id = str(int(time.time() * 10000))
-				Scenes.objects.create(id=cas_id, name=name, description=desc, project_id=project_id, created_by=user_name, updated_by=user_name, create_time=time_strftime(), update_time=time_strftime())
-				logger.info(f'{user_name}---{name}用例创建成功')
-				return JsonResponse({'code': 0, 'msg': '用例创建成功', 'data': None})
+				try:
+					desc = request.POST.get('description')
+					cas_id = str(int(time.time() * 10000))
+					Scenes.objects.create(id=cas_id, name=name, description=desc, project_id=project_id, created_by=user_name, updated_by=user_name, create_time=time_strftime(), update_time=time_strftime())
+					logger.info(f'{user_name}---{name}用例创建成功')
+					return JsonResponse({'code': 0, 'msg': '场景创建成功', 'data': None})
+				except Exception as err:
+					logger.error(err)
+					logger.error(traceback.format_exc())
+					return JsonResponse({'code': 1, 'msg': '场景创建失败，请检查参数是否正确', 'data': None})
 		else:
-			logger.error('用例名称不能为空')
-			return JsonResponse({'code': 1, 'msg': '用例名称不能为空', 'data': None})
+			logger.error('场景名称不能为空')
+			return JsonResponse({'code': 1, 'msg': '场景名称不能为空', 'data': None})
 	if request.method == 'GET':
 		project_id = request.GET.get('projectId')
 		user_name = request.user.username
@@ -391,21 +416,26 @@ def add_scene(request):
 
 def edit_scene(request):
 	"""
-	编辑用例
+	编辑场景
 	"""
 	if request.method == 'POST':
-		scene_id = request.POST.get('Id')
-		project_id = request.POST.get('project_id')
-		name = request.POST.get('name')
-		user_name = request.user.username
-		r = Scenes.objects.get(id=scene_id, project_id=project_id)
-		r.name = name
-		r.description = request.POST.get('description')
-		r.update_time = time_strftime()
-		r.updated_by = user_name
-		r.save()
-		logger.info(f'{user_name}---变量{name}修改成功')
-		return JsonResponse({'code': 0, 'msg': '变量修改成功', 'data': None})
+		try:
+			scene_id = request.POST.get('Id')
+			project_id = request.POST.get('project_id')
+			name = request.POST.get('name')
+			user_name = request.user.username
+			r = Scenes.objects.get(id=scene_id, project_id=project_id)
+			r.name = name
+			r.description = request.POST.get('description')
+			r.update_time = time_strftime()
+			r.updated_by = user_name
+			r.save()
+			logger.info(f'{user_name}---场景{name}修改成功')
+			return JsonResponse({'code': 0, 'msg': '场景修改成功', 'data': None})
+		except Exception as err:
+			logger.error(err)
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '场景修改失败，请检查参数是否正确', 'data': None})
 
 	if request.method == 'GET':
 		user_name = request.user.username
@@ -418,7 +448,7 @@ def edit_scene(request):
 
 def delete_scene(request):
 	"""
-	删除用例
+	删除场景
 	"""
 	if request.method == "GET":
 		case_id = request.GET.get('Id')
@@ -426,15 +456,15 @@ def delete_scene(request):
 		user_name = request.user.username
 		try:
 			Scenes.objects.get(project_id=project_id, id=case_id).delete()
-			logger.info(f'{user_name}---{case_id}变量删除成功')
-			return JsonResponse({'code': 0, 'msg': '变量删除成功', 'data': None})
+			logger.info(f'{user_name}---{case_id}场景删除成功')
+			return JsonResponse({'code': 0, 'msg': '场景删除成功', 'data': None})
 		except ProtectedError as err:
 			logger.info(err)
-			return JsonResponse({'code': 2, 'msg': '变量删除失败，由于存在受保护的外键', 'data': None})
+			return JsonResponse({'code': 2, 'msg': '场景删除失败，由于存在受保护的外键', 'data': None})
 		except Exception as err:
 			logger.error(err)
 			logger.error(traceback.format_exc())
-			return JsonResponse({'code': 1, 'msg': '变量删除失败', 'data': None})
+			return JsonResponse({'code': 1, 'msg': '场景删除失败', 'data': None})
 
 
 def show_scene_interface(request):
@@ -579,47 +609,9 @@ def move_up_or_down(request):
 		return JsonResponse({'code': 1, 'msg': '移动失败', 'data': None})
 
 
-def edit_interface_from_scene(request):
-	"""
-	编辑接口
-	"""
-	pass
-	# if request.method == 'POST':
-	# 	interface_id = request.POST.get('interface_id')
-	# 	project_id = request.POST.get('project_id')
-	# 	user_name = request.user.username
-	# 	r = Interfaces.objects.get(id=interface_id, project_id=project_id)
-	# 	r.name = request.POST.get('name')
-	# 	r.interface = request.POST.get('interface')
-	# 	r.protocol = request.POST.get('protocol')
-	# 	r.method = request.POST.get('method')
-	# 	r.parameter = request.POST.get('parameter')
-	# 	r.timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
-	# 	r.header = request.POST.get('header')
-	# 	r.pre_process = request.POST.get('pre_process')
-	# 	r.post_process = request.POST.get('post_process')
-	# 	r.except_result = request.POST.get('except_result')
-	# 	r.assert_method = request.POST.get('assert_method')
-	# 	r.assert_result = request.POST.get('assert_result')
-	# 	r.description = request.POST.get('description')
-	# 	r.updated_by = user_name
-	# 	r.update_time = time_strftime()
-	# 	r.save()
-	# 	logger.info(f'{user_name}---{interface_id}接口修改成功')
-	# 	return JsonResponse({'code': 0, 'msg': '接口修改成功', 'data': None})
-	#
-	# if request.method == 'GET':
-	# 	interface_id = request.GET.get('Id')
-	# 	project_id = request.GET.get('projectId')
-	# 	case_id = request.GET.get('caseId')
-	# 	user_name = request.user.username
-	# 	interface = Interfaces.objects.get(id=interface_id, project_id=project_id)
-	# 	return render(request, 'ATI/cases/edit_interface.html', context={'interface': interface, 'username': user_name, 'project_id': project_id, 'case_id': case_id})
-
-
 def delete_interface_from_scene(request):
 	"""
-	从用例中删除接口
+	从场景中删除接口
 	"""
 	user_name = request.user.username
 	ID = request.GET.get('Id')
@@ -627,7 +619,7 @@ def delete_interface_from_scene(request):
 	interface_id = request.GET.get('interfaceId')
 	try:
 		InterfaceScene.objects.get(id=ID, interface_id=interface_id).delete()
-		logger.info(f'{user_name}---接口{scene_id}从用例{interface_id}中删除')
+		logger.info(f'{user_name}---接口{interface_id}从场景{scene_id}中删除')
 		return JsonResponse({'code': 0, 'msg': '删除成功', 'data': None})
 	except Exception as err:
 		logger.error(err)
@@ -673,12 +665,17 @@ def add_variable(request):
 				logger.warning('变量已存在，请勿重复添加')
 				return JsonResponse({'code': 1, 'msg': '变量已存在，请勿重复添加！', 'data': None})
 			else:
-				value_v = request.POST.get('value')
-				desc = request.POST.get('description')
-				Variables.objects.create(name=name, description=desc, value=value_v, plan_id=plan_id, create_time=time_strftime(),
-										created_by=user_name, updated_by=user_name, update_time=time_strftime())
-				logger.info(f'{user_name}---{name}变量创建成功')
-				return JsonResponse({'code': 0, 'msg': '变量创建成功', 'data': None})
+				try:
+					value_v = request.POST.get('value')
+					desc = request.POST.get('description')
+					Variables.objects.create(name=name, description=desc, value=value_v, plan_id=plan_id, create_time=time_strftime(),
+											created_by=user_name, updated_by=user_name, update_time=time_strftime())
+					logger.info(f'{user_name}---{name}变量创建成功')
+					return JsonResponse({'code': 0, 'msg': '变量创建成功', 'data': None})
+				except Exception as err:
+					logger.error(err)
+					logger.error(traceback.format_exc())
+					return JsonResponse({'code': 1, 'msg': '变量创建失败，请检查参数是否正确', 'data': None})
 		else:
 			logger.error('变量名称不能为空')
 			return JsonResponse({'code': 1, 'msg': '变量名称不能为空', 'data': None})
@@ -694,17 +691,22 @@ def edit_variable(request):
 		编辑变量
 	"""
 	if request.method == 'POST':
-		name = request.POST.get('name')
-		plan_id = request.POST.get('plan_id')
-		user_name = request.user.username
-		r = Variables.objects.get(name=name, plan_id=plan_id)
-		r.value = request.POST.get('value')
-		r.description = request.POST.get('description')
-		r.update_time = time_strftime()
-		r.updated_by = user_name
-		r.save()
-		logger.info(f'{user_name}---变量{name}修改成功')
-		return JsonResponse({'code': 0, 'msg': '变量修改成功', 'data': None})
+		try:
+			name = request.POST.get('name')
+			plan_id = request.POST.get('plan_id')
+			user_name = request.user.username
+			r = Variables.objects.get(name=name, plan_id=plan_id)
+			r.value = request.POST.get('value')
+			r.description = request.POST.get('description')
+			r.update_time = time_strftime()
+			r.updated_by = user_name
+			r.save()
+			logger.info(f'{user_name}---变量{name}修改成功')
+			return JsonResponse({'code': 0, 'msg': '变量修改成功', 'data': None})
+		except Exception as err:
+			logger.error(err)
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '变量修改失败，请检查参数是否正确', 'data': None})
 
 	if request.method == 'GET':
 		name = request.GET.get('name')
@@ -775,37 +777,42 @@ def add_plan(request):
 				logger.warning('测试计划已存在，请勿重复添加')
 				return JsonResponse({'code': 1, 'msg': '测试计划已存在，请勿重复添加！', 'data': None})
 			else:
-				desc = request.POST.get('description')
-				timing = request.POST.get('timing')
-				interval = request.POST.get('interval')
-				time_setting = request.POST.get('time_setting')
-				sending = request.POST.get('sending')
-				receiver_name = request.POST.get('receiver_name')
-				subject = request.POST.get('subject')
-				receiver_email = request.POST.get('receiver_email')
+				try:
+					desc = request.POST.get('description')
+					timing = request.POST.get('timing')
+					interval = request.POST.get('interval')
+					time_setting = request.POST.get('time_setting')
+					sending = request.POST.get('sending')
+					receiver_name = request.POST.get('receiver_name')
+					subject = request.POST.get('subject')
+					receiver_email = request.POST.get('receiver_email')
 
-				if sending == "0":
-					email = ""
-				else:
-					email = json.dumps({
-						'subject': subject,
-						'receiver_name': receiver_name,
-						'receiver_email': receiver_email
-					}, ensure_ascii=False)
+					if sending == "0":
+						email = ""
+					else:
+						email = json.dumps({
+							'subject': subject,
+							'receiver_name': receiver_name,
+							'receiver_email': receiver_email
+						}, ensure_ascii=False)
 
-				if timing == "0":
-					time_set = ""
-				elif timing == "2":
-					time_set = interval
-				else:
-					time_set = time_setting
-				plan_id = str(int(time.time() * 10000))
-				Plans.objects.create(id=plan_id, name=name, description=desc, project_id=project_id,
-									 timing=timing, time_set=time_set, is_email=sending, email=email,
-									 created_by=user_name, updated_by=user_name,
-									 create_time=time_strftime(), update_time=time_strftime())
-				logger.info(f'{user_name}---{name}测试计划创建成功')
-				return JsonResponse({'code': 0, 'msg': '测试计划创建成功', 'data': None})
+					if timing == "0":
+						time_set = ""
+					elif timing == "2":
+						time_set = interval
+					else:
+						time_set = time_setting
+					plan_id = str(int(time.time() * 10000))
+					Plans.objects.create(id=plan_id, name=name, description=desc, project_id=project_id,
+										 timing=timing, time_set=time_set, is_email=sending, email=email,
+										 created_by=user_name, updated_by=user_name,
+										 create_time=time_strftime(), update_time=time_strftime())
+					logger.info(f'{user_name}---{name}测试计划创建成功')
+					return JsonResponse({'code': 0, 'msg': '测试计划创建成功', 'data': None})
+				except Exception as err:
+					logger.error(err)
+					logger.error(traceback.format_exc())
+					return JsonResponse({'code': 1, 'msg': '测试计划创建失败，请检查参数是否正确', 'data': None})
 		else:
 			logger.error('测试计划名称不能为空')
 			return JsonResponse({'code': 1, 'msg': '测试计划名称不能为空', 'data': None})
@@ -820,47 +827,52 @@ def edit_plan(request):
 	编辑测试计划
 	"""
 	if request.method == 'POST':
-		plan_id = request.POST.get('Id')
-		name = request.POST.get('name')
-		project_id = request.POST.get('project_id')
-		user_name = request.user.username
-		timing = request.POST.get('timing')
-		sending = request.POST.get('sending')
+		try:
+			plan_id = request.POST.get('Id')
+			name = request.POST.get('name')
+			project_id = request.POST.get('project_id')
+			user_name = request.user.username
+			timing = request.POST.get('timing')
+			sending = request.POST.get('sending')
 
-		interval = request.POST.get('interval')
-		time_setting = request.POST.get('time_setting')
-		receiver_name = request.POST.get('receiver_name')
-		subject = request.POST.get('subject')
-		receiver_email = request.POST.get('receiver_email')
+			interval = request.POST.get('interval')
+			time_setting = request.POST.get('time_setting')
+			receiver_name = request.POST.get('receiver_name')
+			subject = request.POST.get('subject')
+			receiver_email = request.POST.get('receiver_email')
 
-		if sending == "0":
-			email = ""
-		else:
-			email = json.dumps({
-				'subject': subject,
-				'receiver_name': receiver_name,
-				'receiver_email': receiver_email
-			}, ensure_ascii=False)
+			if sending == "0":
+				email = ""
+			else:
+				email = json.dumps({
+					'subject': subject,
+					'receiver_name': receiver_name,
+					'receiver_email': receiver_email
+				}, ensure_ascii=False)
 
-		if timing == "0":
-			time_set = ""
-		elif timing == "2":
-			time_set = interval
-		else:
-			time_set = time_setting
-		r = Plans.objects.get(id=plan_id, project_id=project_id)
-		r.description = request.POST.get('description')
-		r.name = name
-		r.timing = timing
-		r.time_set = time_set
-		r.is_email = sending
-		r.email = email
-		r.update_by = user_name
-		r.update_time = time_strftime()
-		r.save()
+			if timing == "0":
+				time_set = ""
+			elif timing == "2":
+				time_set = interval
+			else:
+				time_set = time_setting
+			r = Plans.objects.get(id=plan_id, project_id=project_id)
+			r.description = request.POST.get('description')
+			r.name = name
+			r.timing = timing
+			r.time_set = time_set
+			r.is_email = sending
+			r.email = email
+			r.update_by = user_name
+			r.update_time = time_strftime()
+			r.save()
 
-		logger.info(f'{user_name}---{name}测试计划编辑成功')
-		return JsonResponse({'code': 0, 'msg': '测试计划编辑成功', 'data': None})
+			logger.info(f'{user_name}---{name}测试计划编辑成功')
+			return JsonResponse({'code': 0, 'msg': '测试计划编辑成功', 'data': None})
+		except Exception as err:
+			logger.error(err)
+			logger.error(traceback.format_exc())
+			return JsonResponse({'code': 1, 'msg': '测试计划编辑失败，请检查参数是否正确', 'data': None})
 
 	if request.method == 'GET':
 		user_name = request.user.username
@@ -904,7 +916,6 @@ def copy_plan(request):
 		logger.error(err)
 		logger.error(traceback.format_exc())
 		return JsonResponse({'code': 1, 'msg': '测试计划复制失败', 'data': None})
-
 
 
 def delete_plan(request):
