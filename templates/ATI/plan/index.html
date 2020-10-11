@@ -1,6 +1,7 @@
 {% extends 'base_ati.html' %}
 
 {% block crumbs %}
+<link rel="stylesheet" href="/static/css/tankuang.css">
 <div class="row">
     <div class="col-md-12">
         <ol class="breadcrumb">
@@ -24,23 +25,23 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-heading">
-                <a href="{% url 'ATI:add_plan' %}?projectId={{ project_id }}" class="btn btn-primary">新增测试计划</a>
+                <a href="{% url 'ATI:add_plan' %}?projectId={{ project_id }}" class="btn btn-primary" style="width: 10%;">新增测试计划</a>
                 {% if content == ""  %}
-                    <input type="text" id="content" style="width: 250px; height: 32px; margin-left: 950px;" placeholder="测试计划名称">
+                    <input type="text" id="content" style="width: 18%; height: 32px; margin-left: 63%;" placeholder="测试计划名称">
                 {% else %}
-                    <input type="text" id="content" style="width: 250px; height: 32px; margin-left: 950px;" value="{{ content }}">
+                    <input type="text" id="content" style="width: 18%; height: 32px; margin-left: 63%;" value="{{ content }}">
                 {% endif %}
-                <a href="#" class="btn btn-primary" onclick="search_all();">搜索</a>
+                <a href="#" class="btn btn-primary" onclick="search_all();" style="width: 6%;">搜索</a>
             </div>
             <div class="panel-body">
                 <table class="table table-bordered">
                     <thead>
                     <tr>
-                        <th width="17%">测试计划名称</th>
+                        <th width="19%">测试计划名称</th>
                         <th width="13%">所属项目</th>
-                        <th width="22%">测试计划描述</th>
-                        <th width="10%">更新时间</th>
-                        <th width="38%">操作</th>
+                        <th width="20%">测试计划描述</th>
+                        <th width="12%">更新时间</th>
+                        <th width="36%">操作</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -51,12 +52,18 @@
                         <td>{{ plan.description }}</td>
                         <td>{{ plan.update_time|date:'Y-m-d H:i:s' }}</td>
                         <td>
-                            <a href="{% url 'ATI:show_plan_and_scene' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">查看场景</a>
-                            <a href="{% url 'ATI:variables' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">设置变量</a>
-                            <a href="{% url 'ATI:edit_plan' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 10px;">编辑计划</a>
-                            <a href="#" onclick="copy_scene('{% url 'ATI:copy_plan' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 10px;">复制计划</a>
-                            <a href="#" onclick="run('{% url 'ATI:run' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 10px;">执行计划</a>
-                            <a href="#" onclick="show_link('{{ url }}{% url 'ATI:run' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 10px;">生成外链</a>
+                            <a href="{% url 'ATI:show_plan_and_scene' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 12px;">查看场景</a>
+                            <a href="{% url 'ATI:variables' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 12px;">设置变量</a>
+                            <a href="{% url 'ATI:edit_plan' %}?Id={{ plan.id }}&projectId={{ project_id }}" class="layui-btn layui-btn-xs" style="margin-right: 12px;">编辑计划</a>
+                            <a href="#" onclick="copy_scene('{% url 'ATI:copy_plan' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 12px;">复制计划</a>
+                            <span class="tooltiper">
+                                {% if plan.is_running == 0 %}
+                                    <a id="runner" href="#" onclick="run('{% url 'ATI:add_to_task' %}?Id={{ plan.id }}')" class="layui-btn layui-btn-xs" style="margin-right: 12px;">开始执行</a>
+                                {% else %}
+                                    <a id="runner" href="#" onclick="run('{% url 'ATI:add_to_task' %}?Id={{ plan.id }}&isCancel=1')" class="layui-btn layui-btn-xs" style="margin-right: 12px;">取消执行</a>
+                                {% endif %}
+                                <span class="tooltiptext" style="right: 12%; background-color: #f67d57"><p>外链</p><p>通过GET请求即可触发任务立即执行，不受定时任务设置的影响</p>外链URL：http://{{ url }}{% url 'ATI:run' %}?Id={{ plan.id }}</span>
+                            </span>
                             <a href="#" onclick="openResult('{% url 'ATI:delete_plan' %}?name={{ plan.name }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除计划</a>
                         </td>
                     </tr>
@@ -135,19 +142,26 @@
             success: function (data) {
                 if (data['code'] === 0) {
                     $.Toast(data['msg'], 'success');
+                    window.location.href='{% url 'ATI:plans' %}';
                 } else if (data['code'] === 1)  {
                     $.Toast(data['msg'], 'error');
-                } else {
-                    $.Toast(data['msg'], 'warning');
+                } else if (data['code'] === 2) {
+                    $.ajax({
+                        type: 'get',
+                        url: '{% url 'ATI:run' %}?Id=' + data['data'],
+                        datatype: 'json',
+                        success: function (data) {
+                            if (data['code'] === 0) {
+                                $.Toast(data['msg'], 'success');
+                            } else {
+                                $.Toast(data['msg'], 'error');
+                            }
+                        }
+                    })
                 }
             }
         })
     }
-
-    function show_link(url) {
-        alert(url);
-    }
-
 </script>
 
 {% endblock %}

@@ -5,7 +5,7 @@
 import os
 import time
 from common.config import getConfig
-from common.UploadFDFS import upload_file, upload_by_buffer
+from common.UploadFDFS import upload_file
 
 
 class HtmlController(object):
@@ -13,8 +13,7 @@ class HtmlController(object):
 		self.index = 0
 		self.name = getConfig('htmlTitle')
 		self.title = '<h2 align="center">{}</h2>'.format(self.name)
-		self.path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static/result')
-		self.html = '<html><head><meta http-equiv="Content-Type";content="text/html";charset="utf-8">{}</head><body>{}</body></html>'
+		self.html = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">{}</head><body>{}</body></html>'
 		self.overview = '<h3>本次执行情况</h3><table width="100%" cellspacing="0" cellpadding="6" border="1" ' \
 						'align="center"><tbody><tr><th>用例总数</th><th>用例执行成功数</th><th>用例执行失败数</th>' \
 						'<th>执行总耗时</th><th>执行成功率</th></tr><tr><td align="center">{}</td><td align="center">' \
@@ -52,6 +51,10 @@ class HtmlController(object):
 		self._fail_case = []
 		self._all_case = []
 
+		if getConfig('isFDFS') == '1':
+			self.path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'result')
+		else:
+			self.path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static/result')
 		if not os.path.exists(self.path):
 			os.mkdir(self.path)
 
@@ -74,7 +77,11 @@ class HtmlController(object):
 			result = self.td_success.format(value['result'])
 
 		if value['reason']:
-			reason = self.td_reason.format(value['reason'], value['logger'])
+			ss = ''
+			log_str = value['logger'].split('\n')
+			for line in log_str:
+				ss = ss + f'<p>{line}</p>'
+			reason = self.td_reason.format(value['reason'], ss)
 		else:
 			reason = self.td.format(value['reason'])
 
@@ -126,12 +133,12 @@ class HtmlController(object):
 
 		# 将所有用例测试报告保存到本地
 		html_path = os.path.join(self.path, self.name + str(int(start_time)) + '.html')
-		with open(html_path, 'w') as f:
+		with open(html_path, 'w', encoding='utf-8') as f:
 			f.writelines(all_html)
 
 		# 获取访问地址
 		if getConfig('isFDFS') == '1':
-			remote_path = f"{getConfig('FDFSURL')}{upload_file(html_path)}"
+			remote_path = f"http://{getConfig('FDFSURL')}/{upload_file(html_path)}"
 		else:
 			_, name = os.path.split(html_path)
 			remote_path = f"http://{getConfig('host')}:{getConfig('port')}/static/result/{name}"

@@ -10,7 +10,7 @@ from ATI.Testing import Testing
 
 class Schedule(object):
     def __init__(self):
-        self.thread_pool_size = max(1, int(getConfig('ATIThreadPoolSize')))
+        self.thread_pool_size = max(1, int(getConfig('ATIThreadPoolSize'))) + 1
         self.tasks = queue.Queue()
         self.executor = ThreadPoolExecutor(self.thread_pool_size)
 

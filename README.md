@@ -17,7 +17,7 @@
 
 ### 使用
 1、克隆项目<br>
- `git clone `<br>
+ `git clone https://github.com/leeyoshinari/TestPlatform.git`<br>
  
 2、安装MySQL数据库，并创建一个数据库；
 
@@ -25,8 +25,12 @@
 
 4、修改配置文件`config.conf`；如使用FastDFS，则还要修改`client.conf`；
 
-5、数据库初始化
+5、数据库表结构初始化
+```
+cd TestPlatform 
+python manage.py makemigrations
+```
 
-6、创建超级管理员
+6、创建超级管理员，用于访问Django后台进行权限控制和新建用户
 
 7、启动

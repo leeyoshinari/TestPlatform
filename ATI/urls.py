@@ -10,6 +10,7 @@ from .views import *
 app_name = 'ATI'
 urlpatterns = [
     path('run', run, name='run'),
+    path('addTask', add_to_task, name='add_to_task'),
     path('home', home, name='home'),
     path('project', project, name='project'),
     path('project/add', add_project, name='add_project'),
