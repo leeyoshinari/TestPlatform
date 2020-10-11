@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 
-from ATI.models import Variables, Interfaces, Scenes, InterfaceScene, Plans, ScenePlan
+import time
+from ATI.models import Variables, Interfaces, InterfaceScene, Plans, ScenePlan
+from ATI.request import get
 
 
 def read_scene(plan_id):
+    """
+    根据测试计划id读取测试场景，再根据场景读取测试用例
+    """
     scenes = ScenePlan.objects.filter(plan_id=plan_id, is_run=1).order_by('display_sort')
     for scene in scenes:
         cases = InterfaceScene.objects.filter(scene_id=scene.scene_id, is_run=1).order_by('display_sort')
@@ -30,6 +35,9 @@ def read_scene(plan_id):
 
 
 def read_variable(plan_id):
+    """
+    读取初始化的全局变量
+    """
     global_variable = {}
     variables = Variables.objects.filter(plan_id=plan_id)
     for V in variables:
@@ -38,6 +46,9 @@ def read_variable(plan_id):
 
 
 def read_setting(plan_id):
+    """
+    读取测试计划设置
+    """
     plan = Plans.objects.get(id=plan_id)
     setting = {
         'timing': plan.timing,
@@ -47,4 +58,33 @@ def read_setting(plan_id):
     }
 
     return setting
+
+
+def scan_tasks():
+    tasks = Plans.objects.filter(is_running=1)
+    for task in tasks:
+        if task.timing == 1:
+            set_hour = int(task.time_set.split(':')[0])
+            set_minute = int(task.time_set.split(':')[1])
+            if set_hour == int(time.strftime('%H')) and set_minute == int(time.strftime('%M')):
+                res = get(f'http://{task.host}/run?Id={task.plan_id}')
+                if res['code'] == 0:
+                    task.is_running = 0
+                    task.save()
+                else:
+                    pass
+        elif task.timing == 2:
+            interval = int(task.time_set)
+            if time.time() - task.last_run_time > interval:
+                res = get(f'http://{task.host}/ATI/run?Id={task.plan_id}')
+                if res['code'] == 0:
+                    task.last_run_time = int(time.time())
+                    task.save()
+                else:
+                    pass
+        else:
+            set_hour = int(task.time_set.split(':')[0])
+            set_minute = int(task.time_set.split(':')[1])
+            if set_hour == int(time.strftime('%H')) and set_minute == int(time.strftime('%M')):
+                res = get(f'http://{task.host}/run?Id={task.plan_id}')
 

@@ -10,9 +10,9 @@ class Request(object):
 	def __init__(self):
 		self.session = requests.Session()
 
-	def get(self, url, timeout):
+	def get(self, url, headers, timeout):
 		"""get请求"""
-		res = self.session.get(url=url, timeout=timeout)
+		res = self.session.get(url=url, headers=headers, timeout=timeout)
 		return res
 
 	def post(self, url, data, headers, timeout, files):
@@ -26,8 +26,13 @@ class Request(object):
 	def request(self, url, method, data, headers, timeout, files=None):
 		"""请求入口，目前仅支持get和post请求，其他请求可自行添加"""
 		try:
+			if headers:
+				headers = json.loads(headers)
+			else:
+				headers = None
+
 			if method == 'get':
-				res = self.get(url, timeout)
+				res = self.get(url, headers, timeout)
 			elif method == 'post':
 				res = self.post(url, data, headers, timeout, files)
 			else:
@@ -40,3 +45,11 @@ class Request(object):
 
 	def __del__(self):
 		pass
+
+
+def get(url):
+	try:
+		res = requests.get(url=url)
+		return json.loads(res.content.decode())
+	except:
+		return {'code': 1, 'msg': '测试计划执行失败', 'data': None}

@@ -137,8 +137,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 
 # 不进行登录验证的url
-urls = getConfig('excludeURL').split(',')
-EXCLUDE_URL = [url.strip() for url in urls]
+urls = [url.strip() for url in getConfig('excludeURL').split(',')]
+EXCLUDE_URL = '|'.join(urls)
 
 BASE_LOG_DIR = os.path.join(BASE_DIR, "logs")
 if not os.path.exists(BASE_LOG_DIR):
@@ -181,7 +181,7 @@ LOGGING = {
     'loggers': {
        # 默认的logger应用如下配置
         'django': {
-            'handlers': ['default'],  # 上线之后可以把'console'移除
+            'handlers': ['console'],  # 上线之后可以把'console'移除
             'level': getConfig('level'),
             'propagate': True,  # 向不向更高级别的logger传递
         }

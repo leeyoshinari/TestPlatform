@@ -14,7 +14,7 @@ class Projects(models.Model):
 
 	class Meta:
 		db_table = 'auth_projects'
-		unique_together = ('id',)
+		# unique_together = ('id',)
 		indexes = [models.Index(fields=['type'])]
 
 

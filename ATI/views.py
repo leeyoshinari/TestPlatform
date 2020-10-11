@@ -22,6 +22,37 @@ logger = logging.getLogger('django')
 schedule = Schedule()
 
 
+def add_to_task(request):
+	"""
+	执行测试计划
+	"""
+	username = request.user.username
+	plan_id = request.GET.get('Id')
+	is_cancel = request.GET.get('isCancel')
+	try:
+		if is_cancel:
+			r = Plans.objects.get(id=plan_id)
+			r.is_running = 0
+			r.save()
+			logger.info(f'{username}，测试计划取消执行成功，id={plan_id}')
+			return JsonResponse({'code': 0, 'msg': '取消执行成功', 'data': plan_id}, json_dumps_params={'ensure_ascii': False})
+		else:
+			r = Plans.objects.get(id=plan_id)
+			if r.timing == 0:
+				logger.info(f'{username}，测试计划立即执行，id={plan_id}')
+				return JsonResponse({'code': 2, 'msg': '测试计划立即执行', 'data': plan_id}, json_dumps_params={'ensure_ascii':False})
+			else:
+				r.is_running = 1
+				r.save()
+				logger.info(f'{username}，测试计划添加成功，id={plan_id}')
+				return JsonResponse({'code': 0, 'msg': '测试计划执行成功', 'data': plan_id}, json_dumps_params={'ensure_ascii': False})
+	except Exception as err:
+		logger.error(err)
+		logger.error(traceback.format_exc())
+		logger.info(f'{username}，测试计划执行失败，id={plan_id}')
+		return JsonResponse({'code': 1, 'msg': '测试计划执行失败', 'data': plan_id}, json_dumps_params={'ensure_ascii': False})
+
+
 def run(request):
 	"""
 	执行测试计划
@@ -31,11 +62,12 @@ def run(request):
 		r = Plans.objects.get(id=plan_id)
 		plan = Results.objects.create(plan_id=plan_id, plan_name=r.name, project_id=r.project_id, status=1, type='ATI')
 		schedule.task = (plan.id, plan_id)
-		logger.info((plan.id, plan_id))
+		logger.info(f'执行测试计划成功，id={plan_id}')
 		return JsonResponse({'code': 0, 'msg': '测试计划执行成功', 'data': None}, json_dumps_params={'ensure_ascii':False})
 	except Exception as err:
 		logger.error(err)
 		logger.error(traceback.format_exc())
+		logger.error(f'执行测试计划失败, {request.path}')
 		return JsonResponse({'code': 1, 'msg': '测试计划执行失败', 'data': None}, json_dumps_params={'ensure_ascii':False})
 
 
@@ -72,7 +104,7 @@ def home(request):
 
 			all_list.append(total_info)
 
-		return render(request, 'ATI/home.html', context={'username': user_name, 'all_list': all_list, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'ATI/home.html', context={'username': user_name, 'all_list': all_list, 'page_num': page_num, 'total_num': math.ceil(total_num / 15)})
 
 
 def project(request):
@@ -235,8 +267,8 @@ def interfaces(request):
 		project_name = Projects.objects.get(type='ATI', id=project_id).name
 
 		if content:
-			total_num = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content)).count()
-			interface_list = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content)).order_by('-update_time')[start_index:end_index]
+			total_num = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content) | Q(interface_id__contains=content)).count()
+			interface_list = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content) | Q(interface_id__contains=content)).order_by('-update_time')[start_index:end_index]
 		else:
 			total_num = Interfaces.objects.filter(project_id=project_id).count()
 			interface_list = Interfaces.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
@@ -508,8 +540,8 @@ def add_scene_interface(request):
 		project_name = Projects.objects.get(type='ATI', id=project_id).name
 
 		if content:
-			total_num = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content)).count()
-			interface_list = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content)).order_by('-update_time')[start_index:end_index]
+			total_num = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content) | Q(interface_id__contains=content)).count()
+			interface_list = Interfaces.objects.filter(Q(project_id=project_id), Q(name__contains=content) | Q(interface__contains=content) | Q(interface_id__contains=content)).order_by('-update_time')[start_index:end_index]
 		else:
 			total_num = Interfaces.objects.filter(project_id=project_id).count()
 			interface_list = Interfaces.objects.filter(project_id=project_id).order_by('-update_time')[start_index:end_index]
@@ -526,6 +558,10 @@ def add_interface_to_scene(request):
 		scene_id = request.POST.get('sceneId')
 		interface_id = request.POST.get('interfaceId')
 		total_num = InterfaceScene.objects.filter(scene_id=scene_id).aggregate(Max('display_sort'))['display_sort__max']
+
+		if not total_num:
+			total_num = 0
+
 		InterfaceScene.objects.create(scene_id=scene_id, interface_id=interface_id, is_run=1, display_sort=total_num+1)
 		logger.info(f'{user_name}---将接口{interface_id}添加到用例{scene_id}中')
 		return JsonResponse({'code': 0, 'msg': '接口添加成功', 'data': None})
@@ -748,7 +784,7 @@ def plans(request):
 			page_num = 1
 
 		user_name = request.user.username
-		url = request.META.get('HTTP_HOST')
+		url = request.headers['Host']
 		start_index = (page_num - 1) * 10
 		end_index = page_num * 10
 
@@ -805,7 +841,7 @@ def add_plan(request):
 					plan_id = str(int(time.time() * 10000))
 					Plans.objects.create(id=plan_id, name=name, description=desc, project_id=project_id,
 										 timing=timing, time_set=time_set, is_email=sending, email=email,
-										 created_by=user_name, updated_by=user_name,
+										 created_by=user_name, updated_by=user_name, is_running=0, last_run_time=0,
 										 create_time=time_strftime(), update_time=time_strftime())
 					logger.info(f'{user_name}---{name}测试计划创建成功')
 					return JsonResponse({'code': 0, 'msg': '测试计划创建成功', 'data': None})
@@ -903,7 +939,7 @@ def copy_plan(request):
 		plan_name = plan.name + '_copy'
 		Plans.objects.create(id=plan_id_id, name=plan_name, description=plan.description, project_id=plan.project_id,
 							 timing=plan.timing, time_set=plan.time_set, is_email=plan.is_email, email=plan.email,
-							 created_by=user_name, updated_by=user_name,
+							 is_running=0, last_run_time=0, created_by=user_name, updated_by=user_name,
 							 create_time=time_strftime(), update_time=time_strftime())
 		logger.info(f'{user_name}---{plan_name}测试计划创建成功')
 
@@ -999,7 +1035,11 @@ def add_scene_to_plan(request):
 		user_name = request.user.username
 		scene_id = request.POST.get('sceneId')
 		plan_id = request.POST.get('planId')
-		total_num = ScenePlan.objects.filter(plan_id=plan_id).count()
+		total_num = ScenePlan.objects.filter(plan_id=plan_id).aggregate(Max('display_sort'))['display_sort__max']
+
+		if not total_num:
+			total_num = 0
+
 		ScenePlan.objects.create(plan_id=plan_id, scene_id=scene_id, is_run=1, display_sort=total_num+1)
 		logger.info(f'{user_name}---将测试场景{scene_id}添加到测试计划{plan_id}中')
 		return JsonResponse({'code': 0, 'msg': '测试场景添加成功', 'data': None})
@@ -1125,8 +1165,8 @@ def show_result(request):
 			page_num = 1
 
 		user_name = request.user.username
-		start_index = (page_num - 1) * 10
-		end_index = page_num * 10
+		start_index = (page_num - 1) * 15
+		end_index = page_num * 15
 
 		status = ['未执行', '排队中', '执行中', '执行完成', '已取消', '执行失败']
 
@@ -1137,5 +1177,5 @@ def show_result(request):
 			total_num = Results.objects.filter(type='ATI').count()
 			plan_list = Results.objects.filter(type='ATI').order_by('-start_time')[start_index:end_index]
 
-		return render(request, 'result/result.html', context={'username': user_name, 'plan_list': plan_list, 'content': content, 'status': status, 'page_num': page_num, 'total_num': math.ceil(total_num / 10)})
+		return render(request, 'result/result.html', context={'username': user_name, 'plan_list': plan_list, 'content': content, 'status': status, 'page_num': page_num, 'total_num': math.ceil(total_num / 15)})
 

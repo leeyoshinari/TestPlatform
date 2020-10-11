@@ -9,8 +9,8 @@ import time
 import logging
 import traceback
 from ATI.request import Request
-from ATI.readCase import read_scene, read_variable, read_setting
-from ATI.HtmlController import HtmlController
+from ATI.dealData import read_scene, read_variable, read_setting
+from ATI.dealHtml import HtmlController
 from user.models import Results
 from common.EmailController import sendMsg
 from common.config import getConfig
@@ -190,13 +190,13 @@ class Testing(object):
 		output_dict = {}
 		for s in input_str:
 			if s:
-				input_dict.update({s: self.global_variable.get(s, default=None)})
+				input_dict.update({s: self.global_variable.get(s)})
 
 		exec(expression, input_dict, output_dict)
 
 		for s in output_str:
 			if s:
-				self.global_variable.update({s: output_dict.get(s, default=None)})
+				self.global_variable.update({s: output_dict.get(s)})
 
 
 	def compile(self, data):
@@ -233,14 +233,14 @@ class Testing(object):
 					reason = ''
 				else:
 					result = 'Failure'
-					reason = f"Assertion failure: text expected to equal {true_res}"
+					reason = f"Assertion failure: text expected to equal {expect_res}"
 		else:
 			if expect_res in str(json.loads(true_res)):	# json.loads是避免中文乱码影响断言
 				result = 'Success'
 				reason = ''
 			else:
 				result = 'Failure'
-				reason = f"Assertion failure: text expected to contain {true_res}"
+				reason = f"Assertion failure: text expected to contain {expect_res}"
 
 		return result, reason
 
