@@ -6,6 +6,7 @@ import queue
 from concurrent.futures import ThreadPoolExecutor
 from common.config import getConfig
 from ATI.Testing import Testing
+from ATI.dealData import run_tasks
 
 
 class Schedule(object):
@@ -27,9 +28,14 @@ class Schedule(object):
     def worker(self):
         while True:
             func, param = self.tasks.get()
-            func(param)
+            if param:
+                func(param)
+            else:
+                func()
             self.tasks.task_done()
 
     def run(self):
         for i in range(self.thread_pool_size):
             self.executor.submit(self.worker)
+
+        self.tasks.put((run_tasks, None))

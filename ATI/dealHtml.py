@@ -102,7 +102,10 @@ class HtmlController(object):
 		test_time = f'<p align="right">测试时间：{test_time}</p>'
 		fail_case_num = len(self._fail_case)    # 失败用例数
 		all_case_num = len(self._all_case)      # 所有用例数
-		success_rate = (1 - fail_case_num / all_case_num) * 100     # 计算成功率
+		if all_case_num:
+			success_rate = (1 - fail_case_num / all_case_num) * 100     # 计算成功率
+		else:
+			success_rate = 0
 		spend_time = end_time - start_time      # 测试花费总时间
 
 		# 历史数据，加上本次数据

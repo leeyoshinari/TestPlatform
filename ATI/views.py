@@ -808,6 +808,7 @@ def add_plan(request):
 		name = request.POST.get('name')
 		project_id = request.POST.get('project_id')
 		user_name = request.user.username
+		url = request.headers['Host']
 		if name:
 			if Plans.objects.filter(name=name, project_id=project_id):
 				logger.warning('测试计划已存在，请勿重复添加')
@@ -842,7 +843,7 @@ def add_plan(request):
 					Plans.objects.create(id=plan_id, name=name, description=desc, project_id=project_id,
 										 timing=timing, time_set=time_set, is_email=sending, email=email,
 										 created_by=user_name, updated_by=user_name, is_running=0, last_run_time=0,
-										 create_time=time_strftime(), update_time=time_strftime())
+										 host=url, create_time=time_strftime(), update_time=time_strftime())
 					logger.info(f'{user_name}---{name}测试计划创建成功')
 					return JsonResponse({'code': 0, 'msg': '测试计划创建成功', 'data': None})
 				except Exception as err:
@@ -939,7 +940,7 @@ def copy_plan(request):
 		plan_name = plan.name + '_copy'
 		Plans.objects.create(id=plan_id_id, name=plan_name, description=plan.description, project_id=plan.project_id,
 							 timing=plan.timing, time_set=plan.time_set, is_email=plan.is_email, email=plan.email,
-							 is_running=0, last_run_time=0, created_by=user_name, updated_by=user_name,
+							 is_running=0, last_run_time=0, host=plan.host, created_by=user_name, updated_by=user_name,
 							 create_time=time_strftime(), update_time=time_strftime())
 		logger.info(f'{user_name}---{plan_name}测试计划创建成功')
 

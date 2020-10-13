@@ -61,13 +61,16 @@ def read_setting(plan_id):
 
 
 def scan_tasks():
+    """
+    扫描定时任务，并执行
+    """
     tasks = Plans.objects.filter(is_running=1)
     for task in tasks:
         if task.timing == 1:
             set_hour = int(task.time_set.split(':')[0])
             set_minute = int(task.time_set.split(':')[1])
             if set_hour == int(time.strftime('%H')) and set_minute == int(time.strftime('%M')):
-                res = get(f'http://{task.host}/run?Id={task.plan_id}')
+                res = get(f'http://{task.host}/ATI/run?Id={task.id}')
                 if res['code'] == 0:
                     task.is_running = 0
                     task.save()
@@ -76,7 +79,7 @@ def scan_tasks():
         elif task.timing == 2:
             interval = int(task.time_set)
             if time.time() - task.last_run_time > interval:
-                res = get(f'http://{task.host}/ATI/run?Id={task.plan_id}')
+                res = get(f'http://{task.host}/ATI/run?Id={task.id}')
                 if res['code'] == 0:
                     task.last_run_time = int(time.time())
                     task.save()
@@ -86,5 +89,17 @@ def scan_tasks():
             set_hour = int(task.time_set.split(':')[0])
             set_minute = int(task.time_set.split(':')[1])
             if set_hour == int(time.strftime('%H')) and set_minute == int(time.strftime('%M')):
-                res = get(f'http://{task.host}/run?Id={task.plan_id}')
+                res = get(f'http://{task.host}/ATI/run?Id={task.id}')
 
+
+def run_tasks():
+    start_time = time.strftime('%M')
+    while True:
+        if time.strftime('%M') == start_time:
+            time.sleep(5)
+        else:
+            try:
+                scan_tasks()
+                start_time = time.strftime('%M')
+            except:
+                pass
