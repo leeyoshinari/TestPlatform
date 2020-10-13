@@ -62,7 +62,7 @@
                                 {% else %}
                                     <a id="runner" href="#" onclick="run('{% url 'ATI:add_to_task' %}?Id={{ plan.id }}&isCancel=1')" class="layui-btn layui-btn-xs" style="margin-right: 12px;">取消执行</a>
                                 {% endif %}
-                                <span class="tooltiptext" style="right: 12%; background-color: #f67d57"><p>外链</p><p>通过GET请求即可触发任务立即执行，不受定时任务设置的影响</p>外链URL：http://{{ url }}{% url 'ATI:run' %}?Id={{ plan.id }}</span>
+                                <span class="tooltiptext" style="right: 12%; background-color: #f67d57"><p>生成外链</p><p>通过GET请求即可触发任务立即执行，不受定时任务设置的影响</p>外链URL：http://{{ url }}{% url 'ATI:run' %}?Id={{ plan.id }}</span>
                             </span>
                             <a href="#" onclick="openResult('{% url 'ATI:delete_plan' %}?name={{ plan.name }}&projectId={{ project_id }}')" class="layui-btn layui-btn-danger layui-btn-xs">删除计划</a>
                         </td>
@@ -142,7 +142,7 @@
             success: function (data) {
                 if (data['code'] === 0) {
                     $.Toast(data['msg'], 'success');
-                    window.location.href='{% url 'ATI:plans' %}';
+                    window.location.href='{% url 'ATI:plans' %}?projectId={{ project_id }}';
                 } else if (data['code'] === 1)  {
                     $.Toast(data['msg'], 'error');
                 } else if (data['code'] === 2) {

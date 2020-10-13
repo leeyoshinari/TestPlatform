@@ -10,14 +10,15 @@
 1、接口自动化功能；<br>
 2、相似的测试用例和测试场景可以快速复制；<br>
 3、基于Python的前置和后置处理器，可以方便的对测试用例进行定制化配置；<br>
-4、
-5、
-6、
+4、测试用例、测试场景、测试计划可以方便的可视化管理；<br>
+5、灵活的测试任务执行方式；<br>
 
 
 ### 使用
 1、克隆项目<br>
- `git clone https://github.com/leeyoshinari/TestPlatform.git`<br>
+ ```
+ git clone https://github.com/leeyoshinari/TestPlatform.git
+```
  
 2、安装MySQL数据库，并创建一个数据库；
 
@@ -29,8 +30,18 @@
 ```
 cd TestPlatform 
 python manage.py makemigrations
+python manage.py migrate
 ```
 
 6、创建超级管理员，用于访问Django后台进行权限控制和新建用户
+```
+python manage.py createsuperuser
+```
 
 7、启动
+```
+python manage.py runserver 127.0.0.1:8000
+```
+
+
+### 部署

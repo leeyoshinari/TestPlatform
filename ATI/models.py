@@ -66,6 +66,7 @@ class Plans(models.Model):
 	email = models.CharField(max_length=255, default=None, null=True, verbose_name='邮件信息，json格式')
 	is_running = models.IntegerField(default=0, verbose_name='是否正在执行，0-未执行，1-正在执行')
 	last_run_time = models.IntegerField(default=0, null=True, verbose_name='最后一次执行时间')
+	host = models.CharField(max_length=25, default=None, null=True, verbose_name='主机')
 	created_by = models.CharField(max_length=20, default=None, null=True, verbose_name='创建人')
 	updated_by = models.CharField(max_length=20, default=None, null=True, verbose_name='更新人')
 	create_time = models.DateTimeField(null=True, verbose_name='创建时间')
