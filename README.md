@@ -43,5 +43,15 @@ python manage.py createsuperuser
 python manage.py runserver 127.0.0.1:8000
 ```
 
+8、添加普通用户 <br>
+    访问 `http://ip:port/admin`，用超级管理员登陆，访问Django后台，可添加普通用户；
+    
+9、使用测试平台 <br>
+    访问 `http://ip:port`，可进入测试平台；
 
 ### 部署
+
+### Requirements
+1、Django >= 3.1.1 <br>
+2、requests >= 2.24.0 <br>
+3、PyMySQL >= 0.10.0 <br>
