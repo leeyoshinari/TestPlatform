@@ -51,7 +51,7 @@
                         </div>
                         <label class="col-sm-2 control-label" id="time_set_label" style="display: none;">时间间隔</label>
                         <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content">
-                            <input type="text" id="time_set" placeholder="单位：分钟" class="form-control">
+                            <input type="text" id="time_set" placeholder="单位：s" class="form-control">
                         </div>
                         <label class="col-sm-2 control-label" id="time_set_label1" style="display: none;">定时设置</label>
                         <div class="col-sm-6" style="width: 220px; display: none;" id="time_set_content1">
@@ -100,23 +100,28 @@
         if ("{{ plan.timing }}" === "1" || "{{ plan.timing }}" === "3") {
             let timing = document.getElementById('timing');
             timing.options[0].selected = false;
+            timing.options[2].selected = false;
             document.getElementById('time_set1').value = "{{ plan.time_set }}";
             document.getElementById('time_set_label1').style.display = "block";
             document.getElementById('time_set_content1').style.display = "block";
 
             if ("{{ plan.timing }}" === "1") {
                 timing.options[1].selected = true;
+                timing.options[3].selected = false;
             }
             if ("{{ plan.timing }}" === "3") {
                 timing.options[3].selected = true;
+                timing.options[1].selected = false;
             }
         } else if ("{{ plan.timing }}" === "2") {
-                let timing = document.getElementById('timing');
+                let timing1 = document.getElementById('timing');
                 document.getElementById('time_set').value = "{{ plan.time_set }}";
                 document.getElementById('time_set_label').style.display = "block";
                 document.getElementById('time_set_content').style.display = "block";
-                timing.options[0].selected = false;
-                timing.options[1].selected = true;
+                timing1.options[0].selected = false;
+                timing1.options[2].selected = true;
+                timing1.options[1].selected = false;
+                timing1.options[3].selected = false;
             }
 
         if ("{{ plan.is_email }}" === "1") {
