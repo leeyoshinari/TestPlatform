@@ -292,7 +292,7 @@ def add_interface(request):
 					return JsonResponse({'code': 1, 'msg': '接口ID已存在，请勿重复添加！', 'data': None})
 				else:
 					try:
-						timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
+						timeout = float(request.POST.get('timeout')) if request.POST.get('timeout') else 0.5
 						Interfaces.objects.create(
 							interface_id=interface_id, project_id=project_id, name=request.POST.get('name'),
 							interface=interface, protocol=request.POST.get('protocol'),
@@ -337,7 +337,7 @@ def edit_interface(request):
 			r.protocol = request.POST.get('protocol')
 			r.method = request.POST.get('method')
 			r.parameter = request.POST.get('parameter')
-			r.timeout = request.POST.get('timeout') if request.POST.get('timeout') else 500
+			r.timeout = float(request.POST.get('timeout')) if request.POST.get('timeout') else 0.5
 			r.header = request.POST.get('header')
 			r.pre_process = request.POST.get('pre_process')
 			r.post_process = request.POST.get('post_process')

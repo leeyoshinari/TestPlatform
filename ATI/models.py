@@ -11,7 +11,7 @@ class Interfaces(models.Model):
 	protocol = models.CharField(max_length=10, default='http', verbose_name='接口协议')
 	method = models.CharField(max_length=8, default='get', verbose_name='请求方法')
 	parameter = models.CharField(max_length=200, default=None, null=True, verbose_name='请求参数')
-	timeout = models.IntegerField(default=500, verbose_name='接口超时时间，单位毫秒')
+	timeout = models.FloatField(default=0.5, verbose_name='接口超时时间，单位:秒')
 	header = models.CharField(max_length=200, default=None, null=True, verbose_name='请求头')
 	pre_process = models.CharField(max_length=200, default=None, null=True, verbose_name='前置处理器')
 	post_process = models.CharField(max_length=200, default=None, null=True, verbose_name='后置处理器')
