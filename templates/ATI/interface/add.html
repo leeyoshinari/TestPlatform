@@ -65,7 +65,7 @@
                         </div>
                         <label class="col-sm-2 control-label" style="width: 20%">超时时间</label>
                         <div class="col-sm-6" style="width: 20%;">
-                            <input type="text" id="timeout" placeholder="单位: ms" class="form-control">
+                            <input type="text" id="timeout" placeholder="单位: s" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
@@ -83,7 +83,7 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label">前置处理器</label>
                         <div class="col-sm-6">
-                            <textarea id="pre_process" placeholder="python语法，示例：（两个“${}”中的字母是变量，多个变量用英文逗号隔开）
+                            <textarea id="pre_process" placeholder="python语法，示例：
 #${}${b}     # 第一个“${}”中的字母是输入变量名，没有字母表示为空，第二个“${}”中的b是输出变量名
 b=1       # 直接将1赋值给b，同时b输出，通过“${b}”即可引用b的值
 c=2       # 直接将2赋值给c，因为第二个“${}”中没有c，所以c不输出，不能引用c的值" class="form-control" rows="4"></textarea>

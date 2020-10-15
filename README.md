@@ -28,7 +28,6 @@
 
 5、数据库表结构初始化
 ```
-cd TestPlatform 
 python manage.py makemigrations
 python manage.py migrate
 ```
@@ -40,7 +39,7 @@ python manage.py createsuperuser
 
 7、启动
 ```
-python manage.py runserver 127.0.0.1:8000
+python manage.py runserver 127.0.0.1:12121
 ```
 
 8、添加普通用户 <br>
@@ -50,8 +49,42 @@ python manage.py runserver 127.0.0.1:8000
     访问 `http://ip:port`，可进入测试平台；
 
 ### 部署
+Django部署采用Nginx+uWSGI架构，整个部署的链路是 Nginx -> uWSGI -> Django Web程序，步骤如下：<br>
+1、安装uwsgi
+```
+pip3 install uwsgi
+```
+安装完成后，一般无法直接输入uwsgi命令执行，需要建立软连接
+```
+ln -s /usr/local/python37/bin/uwsgi /usr/bin/uwsgi
+```
+2、修改uwsgi配置文件`uwsgi.ini`，只需要修改项目根目录，可根据需要选择是否修改端口
+
+3、配置nginx，nginx安装部署请自行百度，这里只列出nginx配置文件。配置完成后，重启nginx
+```
+server {
+        listen 12020;
+        server_name localhost;
+        location / {
+                include uwsgi_params;
+                # 这里的配置和uwsgi.ini中的socket一样
+                uwsgi_pass 127.0.0.1:12121;
+        }
+
+        location /static {
+                # 项目静态文件路径
+                alias /home/TestPlatform/static;
+        }
+}
+```
+4、启动uwsgi
+```
+uwsgi uwsgi.ini
+```
+5、部署完成，访问nginx端口即可
 
 ### Requirements
 1、Django >= 3.1.1 <br>
 2、requests >= 2.24.0 <br>
 3、PyMySQL >= 0.10.0 <br>
+4、uWSGI >= 2.0.19.1 <br>
