@@ -17,6 +17,9 @@ def read_scene(plan_id):
         for case in cases:
             case_info = Interfaces.objects.get(id=case.interface_id)
             data = {
+                'total_case': len(cases),
+                'scene_name': scene.scene.name,
+                'scene_id': scene.scene_id,
                 'case_id': case_info.interface_id,
                 'case_name': case_info.name,
                 'url': case_info.interface,

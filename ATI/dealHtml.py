@@ -30,21 +30,21 @@ class HtmlController(object):
 		self.table = '<table width="100%" border="1" cellspacing="0" cellpadding="6" align="center" ' \
 					 'style="table-layout:fixed; word-wrap:break-word;>{}</table>'      # 表格
 		self.table_head = '<tr bgcolor="#99CCFF" align="center">' \
+						  '<th width="9%">场景名称</th>' \
 						  '<th width="10%">用例ID</th>' \
+						  '<th width="15%">用例名称</th>' \
 						  '<th width="30%">请求接口</th>' \
-						  '<th width="20%">请求参数</th>' \
-						  '<th width="15%">响应值</th>' \
-						  '<th width="5%">响应时间</th>' \
-						  '<th width="5%">测试结果</th>' \
-						  '<th width="15%">失败原因</th></tr>'    # 表头，如需定制化测试报告，请修改表头
+						  '<th width="6%">测试结果</th>' \
+						  '<th width="30%">失败原因</th></tr>'    # 表头，如需定制化测试报告，请修改表头
 		self.tr = '<tr>{}</tr>'    # 表格中的每一行
 		self.td = '<td>{}</td>'    # 每一个单元格
-		self.td_reason = '<td><div class="tooltiper">{}<span class="tooltiptext">{}</span></div></td>'
-		self.td_fail = '<td><font color="red">Failure</font></td>'      # 失败用例测试结果红色展示
-		self.td_success = '<td><font color="blue">Success</font></td>'    # 成功用例测试结果蓝色展示
+		self.td_scene = '<td rowspan="{}" style="text-align: center;">{}</td>'
+		self.td_reason = '<td><div class="tooltiper" style="max-width: 100%;">{}<span class="tooltiptext"><p>{}</p></span></div></td>'
+		self.td_fail = '<td style="text-align: center;"><div class="tooltiper" style="max-width: 100%;"><font color="red">Failure</font><span class="tooltiptext"><p>{}</p></span></div></td>'      # 失败用例测试结果红色展示
+		self.td_success = '<td style="text-align: center;"><div class="tooltiper" style="max-width: 100%;"><font color="blue">Success</font><span class="tooltiptext"><p>{}</p></span></div></td>'    # 成功用例测试结果蓝色展示
 		self.last = '<p style="color:blue">此邮件自动发出，请勿回复。</p>'        # 最后一句话
 		self.css = '<style>.tooltiper {display: inline-block;color: red;}.tooltiper .tooltiptext {display: none;' \
-				   'visibility: hidden;right: 12%;max-width: 60%;background-color: #ff0000;color: #ffffff;' \
+				   'visibility: hidden;right: 15%;max-width: 69%;background-color: #ff0000a1;color: #ffffff;' \
 				   'text-align: left;padding: 5px 5px;border-radius: 6px;position: absolute;z-index: 1;}' \
 				   '.tooltiper:hover .tooltiptext {visibility: visible;display: block;}</style>'
 
@@ -67,27 +67,34 @@ class HtmlController(object):
 		case_id = self.td.format(value['case_id'])
 		case_name = self.td.format(value['case_name'])
 		url = self.td.format(value['url'])
-		method = self.td.format(value['method'])
-		param = self.td.format(value['param'])
-		response = self.td.format(value['response'])
-		response_time = self.td.format(str(value['response_time']) + ' ms')
-		if value['result'] == 'Failure':
-			result = self.td_fail.format(value['result'])
-		else:
-			result = self.td_success.format(value['result'])
 
 		if value['reason']:
-			ss = ''
-			log_str = value['logger'].split('\n')
-			for line in log_str:
-				ss = ss + f'<p>{line}</p>'
+			ss = value['logger'].replace('\n', '<br>')
 			reason = self.td_reason.format(value['reason'], ss)
 		else:
 			reason = self.td.format(value['reason'])
 
+		float_window = f"测试场景名称：{value['scene_name']}<br>" \
+					   f"测试用例Id：{value['case_id']}<br>" \
+					   f"测试用例名称：{value['case_name']}<br>" \
+					   f"请求URL：{value['url']}<br>请求方法：{value['method']}<br>" \
+					   f"请求参数：{value['param']}<br>" \
+					   f"响应值：{value['response']}<br>" \
+					   f"响应时间：{value['response_time']}<br>" \
+					   f"测试结果：{value['result']}<br>" \
+					   f"失败原因：{value['reason']}<br>"
+		if value['result'] == 'Failure':
+			result = self.td_fail.format(float_window)
+		else:
+			result = self.td_success.format(float_window)
+
 		# 把所有结果写到一行里
 		# 如需定制化测试报告，可在此修改
-		res = self.tr.format('{}{}{}{}{}{}{}'.format(case_id, url, param, response, response_time, result, reason))
+		if value['flag']:
+			scene_name = self.td_scene.format(value['total_case'], value['scene_name'])
+			res = self.tr.format('{}{}{}{}{}{}'.format(scene_name, case_id, case_name, url, result, reason))
+		else:
+			res = self.tr.format('{}{}{}{}{}'.format(case_id, case_name, url, result, reason))
 
 		if value['result'] == 'Failure':    # 失败用例单独存储，用于发送邮件
 			self._fail_case.append(res)
@@ -144,7 +151,7 @@ class HtmlController(object):
 			remote_path = f"http://{getConfig('FDFSURL')}/{upload_file(html_path)}"
 		else:
 			_, name = os.path.split(html_path)
-			remote_path = f"http://{getConfig('host')}:{getConfig('port')}/static/result/{name}"
+			remote_path = f"/static/result/{name}"
 
 		# 根据成功率决定邮件正文内容，生成失败用例测试报告
 		if success_rate == 100:
