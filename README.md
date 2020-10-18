@@ -48,7 +48,6 @@ python manage.py runserver 127.0.0.1:12121
 9、使用测试平台 <br>
     访问 `http://ip:port`，可进入测试平台；
 
-
 ### 部署
 Django部署采用Nginx+uWSGI架构，整个部署的链路是 Nginx -> uWSGI -> Django Web程序，步骤如下：<br>
 1、安装uwsgi
@@ -83,7 +82,6 @@ server {
 uwsgi uwsgi.ini
 ```
 5、部署完成，访问nginx端口即可
-
 
 ### Requirements
 1、Django >= 3.1.1 <br>
