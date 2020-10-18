@@ -40,8 +40,14 @@ class Testing(object):
 		r.save()
 
 		start_time = time.time()
+		scene_id = ''
 		try:
 			for case in self.scenes:      # 遍历所有用例
+				if scene_id == case['scene_id']:
+					flag = 0
+				else:
+					flag = 1
+					scene_id = case['scene_id']
 				response_time = 0
 				try:
 					if case['pre_process']:		#前置处理器
@@ -51,7 +57,7 @@ class Testing(object):
 					case['url'] = self.compile(case['url'])
 					case['param'] = self.compile(case['param'])
 
-					logger.info(f"正在执行用例{case['case_id']}-->{case['case_name']}-->{case['url']}")
+					logger.info(f"正在执行用例{case['scene_name']}-->{case['case_id']}-->{case['case_name']}-->{case['url']}")
 
 					res = self.request.request(url=case['url'], method=case['method'], data=case['param'], headers=case['header'], timeout=case['timeout'])
 					logger.debug(f"{case['case_id']}-->{case['url']}-->{res.content.decode()}")
@@ -94,13 +100,16 @@ class Testing(object):
 
 				# 拼接测试结果
 				case_result = {
+					'flag': flag,
+					'total_case': case['total_case'],
+					'scene_name': case['scene_name'],
 					'case_id': case['case_id'],
 					'case_name': case['case_name'],
 					'url': case['url'],
 					'method': case['method'],
 					'param': case['param'] if case['method'] == 'post' else '',
 					'response': response if result != 'Success' else '',
-					'response_time': response_time,
+					'response_time': str(response_time) + ' ms',
 					'result': result,
 					'reason': reason,
 					'logger': log_str,
